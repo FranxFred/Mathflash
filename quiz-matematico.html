@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MathFlash">
+<title>MathFlash — Examen Sorpresa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131c;
+    --surface2: #1c1c2a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0f0f8;
+    --muted: #7070a0;
+    --accent: #7b6cff;
+    --accent2: #ff6c9a;
+    --green: #4fffb0;
+    --red: #ff4f6c;
+    --amber: #ffca5a;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; background:var(--bg); color:var(--text); font-family:var(--sans); overflow-x:hidden; }
+
+  /* Layout */
+  #app { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+
+  /* Screens */
+  .screen { width:100%; max-width:440px; display:none; flex-direction:column; gap:20px; }
+  .screen.active { display:flex; }
+
+  /* Header badge */
+  .badge {
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(123,108,255,0.15); border:1px solid rgba(123,108,255,0.3);
+    border-radius:100px; padding:5px 14px; font-size:12px; color:var(--accent);
+    letter-spacing:0.1em; text-transform:uppercase; font-weight:700;
+    align-self:center;
+  }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+
+  /* Title */
+  .title { font-size:clamp(32px,8vw,48px); font-weight:800; line-height:1.1; text-align:center; }
+  .title span { color:var(--accent); }
+  .subtitle { text-align:center; color:var(--muted); font-size:15px; line-height:1.6; }
+
+  /* Card */
+  .card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:20px; padding:24px;
+  }
+  .card-label { font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); font-weight:700; margin-bottom:12px; }
+
+  /* Buttons */
+  .btn {
+    width:100%; padding:16px; border-radius:14px; border:none; cursor:pointer;
+    font-family:var(--sans); font-size:16px; font-weight:700;
+    transition:transform 0.1s, opacity 0.2s;
+  }
+  .btn:active { transform:scale(0.97); }
+  .btn-primary { background:var(--accent); color:white; }
+  .btn-primary:hover { opacity:0.9; }
+  .btn-ghost { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+
+  /* Slider rows */
+  .slider-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .slider-row:last-child { margin-bottom:0; }
+  .slider-row label { font-size:12px; color:var(--muted); width:36px; flex-shrink:0; }
+  .slider-row input[type=range] { flex:1; accent-color:var(--accent); cursor:pointer; }
+  .slider-val {
+    font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent);
+    background:rgba(123,108,255,0.12); border:1px solid rgba(123,108,255,0.25);
+    border-radius:8px; padding:4px 10px; min-width:56px; text-align:center; flex-shrink:0;
+  }
+  .slider-summary { font-size:13px; color:var(--muted); margin-top:10px; text-align:center; }
+  .slider-summary strong { color:var(--text); }
+
+  /* Schedule */
+  .schedule-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .schedule-field { display:flex; flex-direction:column; gap:6px; }
+  .schedule-field label { font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); font-weight:700; }
+  .schedule-field input[type=time] {
+    background:var(--surface2); border:1.5px solid var(--border2); border-radius:12px;
+    color:var(--text); font-family:var(--mono); font-size:18px; font-weight:700;
+    padding:12px 14px; outline:none; width:100%;
+    color-scheme:dark;
+  }
+  .schedule-field input[type=time]:focus { border-color:var(--accent); }
+  .schedule-note { font-size:12px; color:var(--muted); text-align:center; margin-top:8px; line-height:1.5; }
+  .schedule-badge {
+    display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700;
+    background:rgba(255,202,90,0.12); border:1px solid rgba(255,202,90,0.25);
+    color:var(--amber); border-radius:100px; padding:4px 12px; margin-top:6px;
+  }
+  .sleeping-banner {
+    background:rgba(255,202,90,0.08); border:1px solid rgba(255,202,90,0.2);
+    border-radius:14px; padding:14px 18px; display:none; align-items:center; gap:10px;
+  }
+  .sleeping-banner.show { display:flex; }
+  .sleeping-banner-text { font-size:13px; color:var(--amber); flex:1; line-height:1.5; }
+
+  /* Type toggles */
+  .type-grid { display:flex; flex-wrap:wrap; gap:8px; }
+  .type-tog {
+    padding:8px 16px; border-radius:100px; border:1.5px solid var(--border);
+    background:var(--surface2); cursor:pointer; font-family:var(--sans);
+    color:var(--muted); font-size:13px; font-weight:700; transition:all 0.15s;
+  }
+  .type-tog.on { border-color:var(--accent2); color:var(--accent2); background:rgba(255,108,154,0.12); }
+
+  /* ---- QUESTION SCREEN ---- */
+  .notif-header {
+    display:flex; align-items:center; gap:10px;
+    background:var(--surface2); border-radius:14px; padding:10px 14px;
+    border:1px solid var(--border);
+  }
+  .notif-icon {
+    width:34px; height:34px; border-radius:10px; background:var(--accent);
+    display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;
+  }
+  .notif-app { font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; }
+  .notif-time { font-size:12px; color:var(--muted); margin-left:auto; font-family:var(--mono); }
+
+  .question-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:24px; padding:32px 24px; text-align:center;
+    position:relative; overflow:hidden;
+  }
+  .q-type { font-size:11px; text-transform:uppercase; letter-spacing:0.15em; color:var(--muted); font-weight:700; margin-bottom:16px; }
+  .q-text { font-family:var(--mono); font-size:clamp(36px,10vw,56px); font-weight:700; color:var(--text); line-height:1.1; margin-bottom:8px; }
+  .q-hint { font-size:13px; color:var(--muted); margin-bottom:24px; }
+  .q-decoration {
+    position:absolute; top:-40px; right:-40px; width:140px; height:140px;
+    border-radius:50%; background:rgba(123,108,255,0.06); pointer-events:none;
+  }
+
+  /* Input */
+  .answer-wrap { display:flex; gap:10px; }
+  .answer-input {
+    flex:1; padding:16px; border-radius:14px;
+    background:var(--surface2); border:1.5px solid var(--border2);
+    color:var(--text); font-family:var(--mono); font-size:24px; font-weight:700;
+    text-align:center; outline:none; transition:border-color 0.2s;
+    -webkit-appearance:none;
+  }
+  .answer-input:focus { border-color:var(--accent); }
+  .answer-input.correct { border-color:var(--green); background:rgba(79,255,176,0.08); }
+  .answer-input.wrong { border-color:var(--red); background:rgba(255,79,108,0.08); }
+  .btn-send { width:58px; height:58px; border-radius:14px; flex-shrink:0; font-size:22px; display:flex; align-items:center; justify-content:center; }
+
+  /* Feedback */
+  .feedback {
+    border-radius:14px; padding:16px; text-align:center;
+    font-size:15px; font-weight:700; display:none;
+  }
+  .feedback.show { display:block; }
+  .feedback.correct { background:rgba(79,255,176,0.1); color:var(--green); border:1px solid rgba(79,255,176,0.2); }
+  .feedback.wrong { background:rgba(255,79,108,0.1); color:var(--red); border:1px solid rgba(255,79,108,0.2); }
+
+  /* Stats bar */
+  .stats-bar { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .stat { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; text-align:center; }
+  .stat-val { font-family:var(--mono); font-size:22px; font-weight:700; }
+  .stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:4px; }
+  .stat-val.green { color:var(--green); }
+  .stat-val.red { color:var(--red); }
+  .stat-val.amber { color:var(--amber); }
+
+  /* Timer bar */
+  .timer-bar-wrap {
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 18px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .timer-label { font-size:13px; color:var(--muted); flex:1; }
+  .timer-val { font-family:var(--mono); font-size:14px; font-weight:700; color:var(--amber); }
+  .timer-track { flex:2; height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+  .timer-fill { height:100%; background:var(--amber); border-radius:2px; transition:width 1s linear; }
+
+  /* Keypad */
+  .keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .key {
+    padding:16px 8px; border-radius:12px; background:var(--surface);
+    border:1px solid var(--border); font-family:var(--mono); font-size:20px; font-weight:700;
+    color:var(--text); cursor:pointer; text-align:center; transition:all 0.1s; user-select:none;
+  }
+  .key:active { background:var(--surface2); transform:scale(0.95); }
+  .key.del { color:var(--muted); font-size:16px; }
+  .key.ok { background:var(--accent); color:white; }
+  .key.neg { color:var(--accent2); }
+
+  /* Permission screen */
+  .perm-icon { font-size:56px; text-align:center; }
+  .perm-steps { display:flex; flex-direction:column; gap:10px; }
+  .perm-step { display:flex; align-items:flex-start; gap:12px; }
+  .perm-num { width:24px; height:24px; border-radius:50%; background:var(--accent); color:white; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+  .perm-text { font-size:14px; color:var(--muted); line-height:1.5; }
+
+  /* Animations */
+  @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .screen.active { animation:slideIn 0.3s ease; }
+
+  /* No keypad on desktop */
+  @media(min-width:500px) { .keypad-wrap { display:none; } }
+
+  /* Dark scrollbar */
+  ::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SCREEN: HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="badge"><div class="dot"></div> MathFlash</div>
+    <div>
+      <div class="title">Examen<br><span>Sorpresa</span></div>
+    </div>
+    <div class="subtitle">Notificaciones con preguntas de matemáticas en intervalos aleatorios. ¿Cuánto sabes?</div>
+
+    <div class="card">
+      <div class="card-label">Intervalo aleatorio de notificaciones</div>
+      <div class="slider-row">
+        <label>Mín</label>
+        <input type="range" id="slider-min" min="1" max="59" value="5" step="1">
+        <div class="slider-val" id="val-min">5 min</div>
+      </div>
+      <div class="slider-row">
+        <label>Máx</label>
+        <input type="range" id="slider-max" min="2" max="60" value="30" step="1">
+        <div class="slider-val" id="val-max">30 min</div>
+      </div>
+      <div class="slider-summary">Cada pregunta llegará en un momento<br><strong>aleatorio entre esos dos valores</strong></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Horario permitido</div>
+      <div class="schedule-row">
+        <div class="schedule-field">
+          <label>Desde</label>
+          <input type="time" id="sched-from" value="07:00">
+        </div>
+        <div class="schedule-field">
+          <label>Hasta</label>
+          <input type="time" id="sched-to" value="22:00">
+        </div>
+      </div>
+      <div class="schedule-note">Fuera de este horario las notificaciones se pausan automáticamente y reanudan al inicio del siguiente día.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Tipos de pregunta</div>
+      <div class="type-grid">
+        <div class="type-tog on" data-type="mult">✕ Multiplicación</div>
+        <div class="type-tog on" data-type="div">÷ División</div>
+        <div class="type-tog on" data-type="pow">^ Potencias</div>
+        <div class="type-tog on" data-type="sqrt">√ Raíces</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Rango de números</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;color:var(--muted)">Del</span>
+        <select id="range-from" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:10px;border-radius:10px;font-family:var(--sans);font-size:14px"></select>
+        <span style="font-size:13px;color:var(--muted)">al</span>
+        <select id="range-to" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:10px;border-radius:10px;font-family:var(--sans);font-size:14px"></select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-start">Activar notificaciones →</button>
+    <button class="btn btn-ghost" id="btn-practice">Practicar ahora sin notificaciones</button>
+  </div>
+
+  <!-- SCREEN: PERMISSION -->
+  <div class="screen" id="screen-perm">
+    <div class="perm-icon">🔔</div>
+    <div class="title" style="text-align:center;font-size:32px">Activa<br>las notificaciones</div>
+    <div class="card">
+      <div class="perm-steps">
+        <div class="perm-step"><div class="perm-num">1</div><div class="perm-text">Aparecerá un diálogo del navegador pidiendo permiso para mostrar notificaciones</div></div>
+        <div class="perm-step"><div class="perm-num">2</div><div class="perm-text">Toca <strong>Permitir</strong> para recibir las preguntas en tu barra de notificaciones</div></div>
+        <div class="perm-step"><div class="perm-num">3</div><div class="perm-text">Para mejor experiencia: <strong>Instala esta página</strong> desde el menú del navegador → "Añadir a pantalla de inicio"</div></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btn-req-perm">Solicitar permiso →</button>
+    <button class="btn btn-ghost" id="btn-skip-perm">Continuar sin notificaciones</button>
+  </div>
+
+  <!-- SCREEN: ACTIVE (waiting) -->
+  <div class="screen" id="screen-active">
+    <div class="badge"><div class="dot"></div> Activo</div>
+    <div class="title" style="text-align:center;font-size:30px">Modo notificaciones<br><span>activado</span></div>
+
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-val green" id="s-correct">0</div><div class="stat-label">Correctas</div></div>
+      <div class="stat"><div class="stat-val red" id="s-wrong">0</div><div class="stat-label">Falladas</div></div>
+      <div class="stat"><div class="stat-val amber" id="s-pct">—</div><div class="stat-label">Racha</div></div>
+    </div>
+
+    <div class="sleeping-banner" id="sleeping-banner">
+      <span style="font-size:20px">🌙</span>
+      <div class="sleeping-banner-text" id="sleeping-text">Fuera del horario permitido. Las notificaciones se reanudan a las 07:00.</div>
+    </div>
+
+    <div class="timer-bar-wrap" id="timer-wrap">
+      <div class="timer-label">Próxima pregunta en</div>
+      <div class="timer-fill" id="timer-fill" style="width:100%"></div>
+      <div class="timer-val" id="timer-val">--:--</div>
+    </div>
+
+    <button class="btn btn-ghost" id="btn-now">Pregunta ahora mismo</button>
+    <button class="btn btn-ghost" id="btn-stop">Detener notificaciones</button>
+  </div>
+
+  <!-- SCREEN: QUESTION -->
+  <div class="screen" id="screen-q">
+    <div class="notif-header">
+      <div class="notif-icon">⚡</div>
+      <div><div class="notif-app">MathFlash</div><div style="font-size:13px;color:var(--text);margin-top:1px">Pregunta sorpresa</div></div>
+      <div class="notif-time" id="q-time">--:--</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-decoration"></div>
+      <div class="q-type" id="q-type-label">Multiplicación</div>
+      <div class="q-text" id="q-text">7 × 8 = ?</div>
+      <div class="q-hint" id="q-hint"></div>
+      <div class="answer-wrap">
+        <input class="answer-input" id="answer-input" type="number" inputmode="none" placeholder="?" autocomplete="off">
+        <button class="btn btn-primary btn-send" id="btn-check">↵</button>
+      </div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="keypad-wrap">
+      <div class="keypad" id="keypad">
+        <div class="key" data-k="7">7</div><div class="key" data-k="8">8</div><div class="key" data-k="9">9</div>
+        <div class="key" data-k="4">4</div><div class="key" data-k="5">5</div><div class="key" data-k="6">6</div>
+        <div class="key" data-k="1">1</div><div class="key" data-k="2">2</div><div class="key" data-k="3">3</div>
+        <div class="key neg" data-k="-">±</div><div class="key" data-k="0">0</div><div class="key del" data-k="del">⌫</div>
+        <div class="key ok" data-k="ok" style="grid-column:1/-1;font-size:14px;letter-spacing:0.05em">COMPROBAR</div>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-val green" id="q-correct">0</div><div class="stat-label">Correctas</div></div>
+      <div class="stat"><div class="stat-val red" id="q-wrong">0</div><div class="stat-label">Falladas</div></div>
+      <div class="stat"><div class="stat-val amber" id="q-streak">0</div><div class="stat-label">Racha</div></div>
+    </div>
+
+    <button class="btn btn-ghost" id="btn-skip">Siguiente pregunta →</button>
+    <button class="btn btn-ghost" id="btn-back-home">‹ Volver al menú</button>
+  </div>
+
+</div>
+
+<script>
+// ========== STATE ==========
+const state = {
+  intervalMin: 5, intervalMax: 30,
+  schedFrom: '07:00', schedTo: '22:00',
+  types: ['mult','div','pow','sqrt'],
+  rangeFrom: 2, rangeTo: 20,
+  correct: 0, wrong: 0, streak: 0,
+  timerID: null, timerStart: null, timerDuration: 0,
+  currentAnswer: null, currentQuestion: null,
+  notifMode: false, answered: false, sleeping: false
+};
+
+// ========== INIT ==========
+function init() {
+  // Range selects
+  const fs = document.getElementById('range-from');
+  const ts = document.getElementById('range-to');
+  for(let i=2;i<=20;i++) { fs.innerHTML+=`<option value="${i}">${i}</option>`; ts.innerHTML+=`<option value="${i}" ${i==20?'selected':''}>${i}</option>`; }
+
+  // Sliders
+  const slMin=document.getElementById('slider-min'), slMax=document.getElementById('slider-max');
+  const vMin=document.getElementById('val-min'), vMax=document.getElementById('val-max');
+  function fmtMins(m){return m<60?`${m} min`:`${Math.floor(m/60)}h ${m%60?m%60+'m':''}`;}
+  function syncSliders(){
+    let mn=+slMin.value, mx=+slMax.value;
+    if(mn>=mx){mx=mn+1; slMax.value=mx;}
+    state.intervalMin=mn; state.intervalMax=mx;
+    vMin.textContent=fmtMins(mn); vMax.textContent=fmtMins(mx);
+  }
+  slMin.addEventListener('input',syncSliders);
+  slMax.addEventListener('input',syncSliders);
+  syncSliders();
+
+  // Schedule inputs
+  document.getElementById('sched-from').addEventListener('change',e=>state.schedFrom=e.target.value);
+  document.getElementById('sched-to').addEventListener('change',e=>state.schedTo=e.target.value);
+
+  // Type toggles
+  document.querySelectorAll('.type-tog').forEach(t=>{
+    t.addEventListener('click',()=>{
+      const type=t.dataset.type;
+      if(t.classList.contains('on')) {
+        const remaining=state.types.filter(x=>x!==type);
+        if(remaining.length===0) return;
+        state.types=remaining; t.classList.remove('on');
+      } else { state.types.push(type); t.classList.add('on'); }
+    });
+  });
+
+  // Range
+  fs.addEventListener('change',()=>state.rangeFrom=+fs.value);
+  ts.addEventListener('change',()=>state.rangeTo=+ts.value);
+
+  // Buttons
+  document.getElementById('btn-start').onclick=()=>showScreen('screen-perm');
+  document.getElementById('btn-practice').onclick=()=>{ state.notifMode=false; showQ(); };
+  document.getElementById('btn-req-perm').onclick=reqPerm;
+  document.getElementById('btn-skip-perm').onclick=()=>{ state.notifMode=true; startActive(); };
+  document.getElementById('btn-now').onclick=()=>showQ();
+  document.getElementById('btn-stop').onclick=()=>{ clearTimer(); showScreen('screen-home'); };
+  document.getElementById('btn-check').onclick=checkAnswer;
+  document.getElementById('btn-skip').onclick=()=>{ state.answered=false; showQ(); };
+  document.getElementById('btn-back-home').onclick=()=>{ if(state.notifMode) showScreen('screen-active'); else showScreen('screen-home'); };
+
+  // Keypad
+  document.getElementById('keypad').addEventListener('click', e=>{
+    const k=e.target.closest('.key'); if(!k) return;
+    const v=k.dataset.k; const inp=document.getElementById('answer-input');
+    if(v==='ok'){checkAnswer();return;}
+    if(v==='del'){inp.value=inp.value.slice(0,-1);return;}
+    if(v==='-'){inp.value=inp.value.startsWith('-')?inp.value.slice(1):'-'+inp.value;return;}
+    if(inp.value.length<6) inp.value+=v;
+  });
+
+  document.getElementById('answer-input').addEventListener('keydown',e=>{ if(e.key==='Enter') checkAnswer(); });
+  document.getElementById('q-time').textContent=fmtTime();
+}
+
+// ========== SCHEDULE CHECK ==========
+function isWithinSchedule() {
+  const now=new Date();
+  const cur=now.getHours()*60+now.getMinutes();
+  const [fh,fm]=state.schedFrom.split(':').map(Number);
+  const [th,tm]=state.schedTo.split(':').map(Number);
+  const from=fh*60+fm, to=th*60+tm;
+  if(from<=to) return cur>=from && cur<to;
+  return cur>=from || cur<to; // overnight
+}
+
+// Returns ms until schedule starts (next day if needed)
+function msUntilScheduleStart() {
+  const now=new Date();
+  const [fh,fm]=state.schedFrom.split(':').map(Number);
+  const next=new Date(now);
+  next.setHours(fh,fm,0,0);
+  if(next<=now) next.setDate(next.getDate()+1);
+  return next-now;
+}
+
+function fmtHHMM(hhmm){ const [h,m]=hhmm.split(':'); return `${h}:${m}`; }
+
+// ========== NAVIGATION ==========
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ========== PERMISSIONS ==========
+async function reqPerm() {
+  if(!('Notification' in window)) { alert('Tu navegador no soporta notificaciones.'); startActive(); return; }
+  await Notification.requestPermission();
+  startActive();
+}
+
+function sendNotif(question) {
+  if(Notification.permission==='granted') {
+    const n=new Notification('⚡ MathFlash — Pregunta sorpresa',{
+      body: question.text+' = ?',
+      icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%237b6cff"/><text y="45" x="10" font-size="38" fill="white">⚡</text></svg>',
+      tag:'mathflash', requireInteraction:true, silent:false
+    });
+    n.onclick=()=>{ window.focus(); showQ(question); n.close(); };
+  } else {
+    showQ(question);
+  }
+}
+
+// ========== TIMER ==========
+function startActive() {
+  state.notifMode=true;
+  updateStats();
+  showScreen('screen-active');
+  scheduleNext();
+}
+
+function scheduleNext() {
+  clearTimer();
+
+  if(!isWithinSchedule()) {
+    // Sleep until schedule starts
+    state.sleeping=true;
+    const ms=msUntilScheduleStart();
+    updateSleepUI(true);
+    state._nextFire=setTimeout(()=>{ state.sleeping=false; updateSleepUI(false); scheduleNext(); }, ms);
+    // Still tick the clock every minute for UI
+    state.timerID=setInterval(()=>{ updateTimerBar(ms-(Date.now()-state._sleepStart)); }, 60000);
+    state._sleepStart=Date.now();
+    // Show time remaining until wake
+    updateTimerBar(ms);
+    return;
+  }
+
+  state.sleeping=false;
+  updateSleepUI(false);
+
+  const mins=state.intervalMin+Math.random()*(state.intervalMax-state.intervalMin);
+  let ms=mins*60*1000;
+
+  // Clamp to end of schedule window if needed
+  const now=new Date();
+  const [th,tm]=state.schedTo.split(':').map(Number);
+  const schedEnd=new Date(now); schedEnd.setHours(th,tm,0,0);
+  if(schedEnd<=now) schedEnd.setDate(schedEnd.getDate()+1);
+  const msToEnd=schedEnd-now;
+  if(ms>msToEnd) ms=msToEnd; // fire right at window end then sleep
+
+  state.timerStart=Date.now(); state.timerDuration=ms;
+  updateTimerBar(ms);
+  state.timerID=setInterval(()=>updateTimerBar(), 1000);
+  state._nextFire=setTimeout(()=>{
+    const q=genQuestion();
+    sendNotif(q);
+    scheduleNext();
+  }, ms);
+}
+
+function clearTimer() {
+  if(state.timerID) clearInterval(state.timerID);
+  if(state._nextFire) clearTimeout(state._nextFire);
+  state.timerID=null; state._nextFire=null;
+}
+
+function updateSleepUI(sleeping) {
+  const banner=document.getElementById('sleeping-banner');
+  const wrap=document.getElementById('timer-wrap');
+  if(sleeping){
+    banner.classList.add('show');
+    document.getElementById('sleeping-text').textContent=`Fuera del horario. Las notificaciones se reanudan a las ${fmtHHMM(state.schedFrom)}.`;
+    wrap.style.opacity='0.4';
+  } else {
+    banner.classList.remove('show');
+    wrap.style.opacity='1';
+  }
+}
+
+function updateTimerBar(forceMs) {
+  if(!state.timerStart && forceMs===undefined) return;
+  const elapsed=state.timerStart?Date.now()-state.timerStart:0;
+  const total=forceMs!==undefined?forceMs:state.timerDuration;
+  const remaining=forceMs!==undefined?forceMs:Math.max(0,state.timerDuration-elapsed);
+  const pct=total>0?(remaining/total)*100:0;
+  document.getElementById('timer-fill').style.width=pct+'%';
+  const s=Math.round(remaining/1000);
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+  let label='';
+  if(h>0) label=`${h}h ${m}m`;
+  else if(m>0) label=`${m}:${ss.toString().padStart(2,'0')}`;
+  else label=`0:${ss.toString().padStart(2,'0')}`;
+  document.getElementById('timer-val').textContent=label;
+}
+
+// ========== QUESTION GENERATOR ==========
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+
+function genQuestion() {
+  const types=state.types;
+  const t=types[rnd(0,types.length-1)];
+  const from=Math.max(2,state.rangeFrom), to=Math.min(20,Math.max(from,state.rangeTo));
+  let a,b,text,ans,typeLabel,hint='';
+
+  if(t==='mult') {
+    a=rnd(from,to); b=rnd(from,to);
+    ans=a*b; text=`${a} × ${b}`; typeLabel='Multiplicación';
+  } else if(t==='div') {
+    b=rnd(from,to); ans=rnd(from,to); a=b*ans;
+    text=`${a} ÷ ${b}`; typeLabel='División'; hint=`(resultado exacto)`;
+  } else if(t==='pow') {
+    a=rnd(from,Math.min(to,12)); b=rnd(2,3);
+    ans=Math.pow(a,b); text=`${a} ^ ${b}`; typeLabel=`Potencia (${a}${b===2?'²':'³'})`;
+  } else {
+    ans=rnd(from,Math.min(to,14)); a=ans*ans;
+    text=`√${a}`; typeLabel='Raíz cuadrada'; hint=`raíz de ${a}`;
+  }
+
+  return { text, ans, typeLabel, hint };
+}
+
+// ========== SHOW QUESTION ==========
+function showQ(q) {
+  const question=q||genQuestion();
+  state.currentQuestion=question;
+  state.currentAnswer=question.ans;
+  state.answered=false;
+
+  document.getElementById('q-type-label').textContent=question.typeLabel;
+  document.getElementById('q-text').textContent=question.text+' = ?';
+  document.getElementById('q-hint').textContent=question.hint||'';
+  document.getElementById('q-time').textContent=fmtTime();
+  document.getElementById('answer-input').value='';
+  document.getElementById('answer-input').className='answer-input';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('feedback').textContent='';
+
+  updateQStats();
+  showScreen('screen-q');
+  setTimeout(()=>document.getElementById('answer-input').focus(),300);
+}
+
+// ========== CHECK ANSWER ==========
+function checkAnswer() {
+  if(state.answered) return;
+  const val=document.getElementById('answer-input').value.trim();
+  if(val===''||isNaN(val)) return;
+  const userAns=parseFloat(val);
+  const inp=document.getElementById('answer-input');
+  const fb=document.getElementById('feedback');
+  state.answered=true;
+
+  if(Math.abs(userAns-state.currentAnswer)<0.01) {
+    state.correct++; state.streak++;
+    inp.classList.add('correct');
+    fb.textContent=`✓ ¡Correcto! ${state.currentQuestion.text} = ${state.currentAnswer}`;
+    fb.className='feedback show correct';
+  } else {
+    state.wrong++; state.streak=0;
+    inp.classList.add('wrong');
+    fb.textContent=`✗ Incorrecto. La respuesta es ${state.currentAnswer}`;
+    fb.className='feedback show wrong';
+  }
+  if(state.notifMode) updateStats();
+  updateQStats();
+}
+
+// ========== STATS ==========
+function updateStats() {
+  document.getElementById('s-correct').textContent=state.correct;
+  document.getElementById('s-wrong').textContent=state.wrong;
+  document.getElementById('s-pct').textContent=state.streak+'🔥';
+}
+function updateQStats() {
+  document.getElementById('q-correct').textContent=state.correct;
+  document.getElementById('q-wrong').textContent=state.wrong;
+  document.getElementById('q-streak').textContent=state.streak;
+}
+
+// ========== UTILS ==========
+function fmtTime() {
+  const n=new Date();
+  return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+}
+
+init();
+</script>
+</body>
+</html>
