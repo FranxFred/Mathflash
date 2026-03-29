@@ -2,670 +2,620 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0a0f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MathFlash">
-<title>MathFlash — Examen Sorpresa</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>MathFlash</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #13131c;
-    --surface2: #1c1c2a;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.15);
-    --text: #f0f0f8;
-    --muted: #7070a0;
-    --accent: #7b6cff;
-    --accent2: #ff6c9a;
-    --green: #4fffb0;
-    --red: #ff4f6c;
-    --amber: #ffca5a;
-    --mono: 'JetBrains Mono', monospace;
-    --sans: 'Syne', sans-serif;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { height:100%; background:var(--bg); color:var(--text); font-family:var(--sans); overflow-x:hidden; }
+:root{
+  --bg:#0a0a0f;--s1:#13131c;--s2:#1c1c2a;--s3:#252538;
+  --b0:rgba(255,255,255,0.05);--b1:rgba(255,255,255,0.10);--b2:rgba(255,255,255,0.18);
+  --tx:#f0f0f8;--mu:#6060a0;--mu2:#9090c0;
+  --ac:#7b6cff;--ac2:#ff6c9a;
+  --gr:#4fffb0;--rd:#ff4f6c;--am:#ffca5a;--cy:#5af0ff;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--sans);overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.screen{width:100%;max-width:480px;height:100%;display:none;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.screen.active{animation:fadeUp .22s ease}
+.sb{flex:1;overflow-y:auto;padding:14px 16px 28px;display:flex;flex-direction:column;gap:13px}
+.sb::-webkit-scrollbar{width:3px}
+.sb::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
 
-  /* Layout */
-  #app { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+/* top bar */
+.tbar{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px;flex-shrink:0;border-bottom:1px solid var(--b0)}
+.tbar-title{font-size:16px;font-weight:700}
+.tbar-sub{font-size:11px;color:var(--mu);margin-top:1px}
+.ibtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--b1);background:var(--s2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0}
+.ibtn:active{transform:scale(.92)}
 
-  /* Screens */
-  .screen { width:100%; max-width:440px; display:none; flex-direction:column; gap:20px; }
-  .screen.active { display:flex; }
+/* card */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:17px;padding:17px}
+.clbl{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--mu);font-weight:700;margin-bottom:11px}
+.csub{font-size:11px;color:var(--mu);margin-top:8px;line-height:1.5}
 
-  /* Header badge */
-  .badge {
-    display:inline-flex; align-items:center; gap:6px;
-    background:rgba(123,108,255,0.15); border:1px solid rgba(123,108,255,0.3);
-    border-radius:100px; padding:5px 14px; font-size:12px; color:var(--accent);
-    letter-spacing:0.1em; text-transform:uppercase; font-weight:700;
-    align-self:center;
-  }
-  .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); animation:pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+/* buttons */
+.btn{width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:700;transition:transform .1s,opacity .15s}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--ac);color:#fff}
+.btn-p:hover{opacity:.9}
+.btn-g{background:var(--s2);color:var(--tx);border:1px solid var(--b1)}
+.btn-d{background:rgba(255,79,108,.1);color:var(--rd);border:1px solid rgba(255,79,108,.2)}
+.btns{display:flex;flex-direction:column;gap:9px;padding:0 16px 20px;flex-shrink:0}
 
-  /* Title */
-  .title { font-size:clamp(32px,8vw,48px); font-weight:800; line-height:1.1; text-align:center; }
-  .title span { color:var(--accent); }
-  .subtitle { text-align:center; color:var(--muted); font-size:15px; line-height:1.6; }
+/* sliders */
+.sl-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.sl-row:last-of-type{margin-bottom:0}
+.sl-row label{font-size:11px;color:var(--mu);width:28px;flex-shrink:0}
+.sl-row input[type=range]{flex:1;accent-color:var(--ac);cursor:pointer}
+.sv{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ac);background:rgba(123,108,255,.12);border:1px solid rgba(123,108,255,.2);border-radius:6px;padding:3px 8px;min-width:48px;text-align:center;flex-shrink:0}
 
-  /* Card */
-  .card {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:20px; padding:24px;
-  }
-  .card-label { font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); font-weight:700; margin-bottom:12px; }
+/* schedule */
+.sched{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sf{display:flex;flex-direction:column;gap:5px}
+.sf label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);font-weight:700}
+.sf input[type=time]{background:var(--s2);border:1.5px solid var(--b2);border-radius:10px;color:var(--tx);font-family:var(--mono);font-size:16px;font-weight:700;padding:10px 12px;outline:none;width:100%;color-scheme:dark}
+.sf input[type=time]:focus{border-color:var(--ac)}
 
-  /* Buttons */
-  .btn {
-    width:100%; padding:16px; border-radius:14px; border:none; cursor:pointer;
-    font-family:var(--sans); font-size:16px; font-weight:700;
-    transition:transform 0.1s, opacity 0.2s;
-  }
-  .btn:active { transform:scale(0.97); }
-  .btn-primary { background:var(--accent); color:white; }
-  .btn-primary:hover { opacity:0.9; }
-  .btn-ghost { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+/* op pills */
+.ops{display:flex;flex-wrap:wrap;gap:6px}
+.op{padding:7px 13px;border-radius:100px;border:1.5px solid var(--b1);background:var(--s2);cursor:pointer;font-family:var(--sans);color:var(--mu);font-size:12px;font-weight:700;transition:all .14s;display:flex;align-items:center;gap:5px;user-select:none}
+.op .sym{font-family:var(--mono);font-size:13px}
+.op.on{border-color:var(--ac2);color:var(--ac2);background:rgba(255,108,154,.1)}
 
-  /* Slider rows */
-  .slider-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
-  .slider-row:last-child { margin-bottom:0; }
-  .slider-row label { font-size:12px; color:var(--muted); width:36px; flex-shrink:0; }
-  .slider-row input[type=range] { flex:1; accent-color:var(--accent); cursor:pointer; }
-  .slider-val {
-    font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent);
-    background:rgba(123,108,255,0.12); border:1px solid rgba(123,108,255,0.25);
-    border-radius:8px; padding:4px 10px; min-width:56px; text-align:center; flex-shrink:0;
-  }
-  .slider-summary { font-size:13px; color:var(--muted); margin-top:10px; text-align:center; }
-  .slider-summary strong { color:var(--text); }
+/* table chips */
+.tbl-ctrls{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.tc{padding:5px 11px;border-radius:100px;border:1px solid var(--b1);background:var(--s2);font-size:11px;font-weight:700;color:var(--mu2);cursor:pointer;transition:all .12s;user-select:none}
+.tc:active{transform:scale(.93)}
+.tc.hi{border-color:var(--ac);color:var(--ac);background:rgba(123,108,255,.1)}
+.cw{max-height:215px;overflow-y:auto;padding:2px 0}
+.cw::-webkit-scrollbar{width:3px}
+.cw::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{width:36px;height:30px;border-radius:7px;border:1px solid var(--b1);background:var(--s2);font-family:var(--mono);font-size:11px;font-weight:700;color:var(--mu);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;user-select:none;flex-shrink:0}
+.chip:active{transform:scale(.88)}
+.chip.on{border-color:var(--ac);color:var(--ac);background:rgba(123,108,255,.13)}
+.leg{display:flex;gap:10px;margin-top:7px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu)}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 
-  /* Schedule */
-  .schedule-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .schedule-field { display:flex; flex-direction:column; gap:6px; }
-  .schedule-field label { font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); font-weight:700; }
-  .schedule-field input[type=time] {
-    background:var(--surface2); border:1.5px solid var(--border2); border-radius:12px;
-    color:var(--text); font-family:var(--mono); font-size:18px; font-weight:700;
-    padding:12px 14px; outline:none; width:100%;
-    color-scheme:dark;
-  }
-  .schedule-field input[type=time]:focus { border-color:var(--accent); }
-  .schedule-note { font-size:12px; color:var(--muted); text-align:center; margin-top:8px; line-height:1.5; }
-  .schedule-badge {
-    display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700;
-    background:rgba(255,202,90,0.12); border:1px solid rgba(255,202,90,0.25);
-    color:var(--amber); border-radius:100px; padding:4px 12px; margin-top:6px;
-  }
-  .sleeping-banner {
-    background:rgba(255,202,90,0.08); border:1px solid rgba(255,202,90,0.2);
-    border-radius:14px; padding:14px 18px; display:none; align-items:center; gap:10px;
-  }
-  .sleeping-banner.show { display:flex; }
-  .sleeping-banner-text { font-size:13px; color:var(--amber); flex:1; line-height:1.5; }
+/* active screen */
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(123,108,255,.14);border:1px solid rgba(123,108,255,.28);border-radius:100px;padding:4px 13px;font-size:11px;color:var(--ac);letter-spacing:.1em;text-transform:uppercase;font-weight:700;align-self:center}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ac);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+.sbar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stat{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:11px;text-align:center}
+.sv2{font-family:var(--mono);font-size:19px;font-weight:700}
+.sl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
+.sv2.gr{color:var(--gr)}.sv2.rd{color:var(--rd)}.sv2.am{color:var(--am)}
+.tw{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:9px}
+.tlbl{font-size:11px;color:var(--mu);flex-shrink:0}
+.ttrack{flex:1;height:3px;background:var(--s3);border-radius:2px;overflow:hidden}
+.tfill{height:100%;background:var(--am);border-radius:2px;transition:width 1s linear}
+.tval{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--am);flex-shrink:0;min-width:44px;text-align:right}
+.zbanner{background:rgba(255,202,90,.07);border:1px solid rgba(255,202,90,.18);border-radius:12px;padding:12px 15px;display:none;align-items:center;gap:9px}
+.zbanner.show{display:flex}
+.ztxt{font-size:11px;color:var(--am);flex:1;line-height:1.5}
 
-  /* Type toggles */
-  .type-grid { display:flex; flex-wrap:wrap; gap:8px; }
-  .type-tog {
-    padding:8px 16px; border-radius:100px; border:1.5px solid var(--border);
-    background:var(--surface2); cursor:pointer; font-family:var(--sans);
-    color:var(--muted); font-size:13px; font-weight:700; transition:all 0.15s;
-  }
-  .type-tog.on { border-color:var(--accent2); color:var(--accent2); background:rgba(255,108,154,0.12); }
+/* question screen */
+.nbar{display:flex;align-items:center;gap:9px;background:var(--s2);border-radius:12px;padding:9px 12px;border:1px solid var(--b1);flex-shrink:0;margin:0 16px}
+.nico{width:30px;height:30px;border-radius:8px;background:var(--ac);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.napp{font-size:10px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+.ntime{font-size:11px;color:var(--mu);margin-left:auto;font-family:var(--mono)}
+.qcard{background:var(--s1);border:1px solid var(--b1);border-radius:20px;padding:26px 20px;text-align:center;position:relative;overflow:hidden;margin:0 16px}
+.qdeco{position:absolute;top:-46px;right:-46px;width:150px;height:150px;border-radius:50%;background:rgba(123,108,255,.05);pointer-events:none}
+.qop{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--mu);font-weight:700;margin-bottom:12px}
+.qtxt{font-family:var(--mono);font-size:clamp(28px,8vw,50px);font-weight:700;color:var(--tx);line-height:1.1;margin-bottom:5px;word-break:break-all}
+.qhint{font-size:11px;color:var(--mu);margin-bottom:18px;min-height:14px}
+.awrap{display:flex;gap:8px}
+.ainp{flex:1;padding:13px;border-radius:12px;background:var(--s2);border:1.5px solid var(--b2);color:var(--tx);font-family:var(--mono);font-size:20px;font-weight:700;text-align:center;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.ainp:focus{border-color:var(--ac)}
+.ainp.ok{border-color:var(--gr);background:rgba(79,255,176,.07)}
+.ainp.no{border-color:var(--rd);background:rgba(255,79,108,.07)}
+.sbtn{width:50px;height:50px;border-radius:12px;flex-shrink:0;font-size:18px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;background:var(--ac);color:#fff;font-weight:700}
+.fb{border-radius:12px;padding:13px;text-align:center;font-size:13px;font-weight:700;display:none;margin:0 16px}
+.fb.show{display:block}
+.fb.ok{background:rgba(79,255,176,.09);color:var(--gr);border:1px solid rgba(79,255,176,.2)}
+.fb.no{background:rgba(255,79,108,.09);color:var(--rd);border:1px solid rgba(255,79,108,.2)}
+.qsc{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:0 16px}
+.kw{margin:0 16px;flex-shrink:0}
+.kpad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.key{padding:13px 5px;border-radius:10px;background:var(--s1);border:1px solid var(--b1);font-family:var(--mono);font-size:17px;font-weight:700;color:var(--tx);cursor:pointer;text-align:center;transition:all .1s;user-select:none}
+.key:active{background:var(--s2);transform:scale(.92)}
+.key.del{color:var(--mu);font-size:13px}
+.key.kok{background:var(--ac);color:#fff;border-color:var(--ac)}
+.key.neg{color:var(--ac2)}
+@media(min-width:500px){.kw{display:none}}
+.qscroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:10px 0 6px}
+.qscroll::-webkit-scrollbar{display:none}
 
-  /* ---- QUESTION SCREEN ---- */
-  .notif-header {
-    display:flex; align-items:center; gap:10px;
-    background:var(--surface2); border-radius:14px; padding:10px 14px;
-    border:1px solid var(--border);
-  }
-  .notif-icon {
-    width:34px; height:34px; border-radius:10px; background:var(--accent);
-    display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;
-  }
-  .notif-app { font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; }
-  .notif-time { font-size:12px; color:var(--muted); margin-left:auto; font-family:var(--mono); }
+/* home */
+.hero{text-align:center;padding:24px 0 6px}
+.hero h1{font-size:clamp(36px,11vw,52px);font-weight:800;line-height:1}
+.hero h1 span{color:var(--ac)}
+.hsub{font-size:12px;color:var(--mu);line-height:1.65;margin-top:7px}
 
-  .question-card {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:24px; padding:32px 24px; text-align:center;
-    position:relative; overflow:hidden;
-  }
-  .q-type { font-size:11px; text-transform:uppercase; letter-spacing:0.15em; color:var(--muted); font-weight:700; margin-bottom:16px; }
-  .q-text { font-family:var(--mono); font-size:clamp(36px,10vw,56px); font-weight:700; color:var(--text); line-height:1.1; margin-bottom:8px; }
-  .q-hint { font-size:13px; color:var(--muted); margin-bottom:24px; }
-  .q-decoration {
-    position:absolute; top:-40px; right:-40px; width:140px; height:140px;
-    border-radius:50%; background:rgba(123,108,255,0.06); pointer-events:none;
-  }
-
-  /* Input */
-  .answer-wrap { display:flex; gap:10px; }
-  .answer-input {
-    flex:1; padding:16px; border-radius:14px;
-    background:var(--surface2); border:1.5px solid var(--border2);
-    color:var(--text); font-family:var(--mono); font-size:24px; font-weight:700;
-    text-align:center; outline:none; transition:border-color 0.2s;
-    -webkit-appearance:none;
-  }
-  .answer-input:focus { border-color:var(--accent); }
-  .answer-input.correct { border-color:var(--green); background:rgba(79,255,176,0.08); }
-  .answer-input.wrong { border-color:var(--red); background:rgba(255,79,108,0.08); }
-  .btn-send { width:58px; height:58px; border-radius:14px; flex-shrink:0; font-size:22px; display:flex; align-items:center; justify-content:center; }
-
-  /* Feedback */
-  .feedback {
-    border-radius:14px; padding:16px; text-align:center;
-    font-size:15px; font-weight:700; display:none;
-  }
-  .feedback.show { display:block; }
-  .feedback.correct { background:rgba(79,255,176,0.1); color:var(--green); border:1px solid rgba(79,255,176,0.2); }
-  .feedback.wrong { background:rgba(255,79,108,0.1); color:var(--red); border:1px solid rgba(255,79,108,0.2); }
-
-  /* Stats bar */
-  .stats-bar { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-  .stat { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; text-align:center; }
-  .stat-val { font-family:var(--mono); font-size:22px; font-weight:700; }
-  .stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:4px; }
-  .stat-val.green { color:var(--green); }
-  .stat-val.red { color:var(--red); }
-  .stat-val.amber { color:var(--amber); }
-
-  /* Timer bar */
-  .timer-bar-wrap {
-    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 18px;
-    display:flex; align-items:center; gap:12px;
-  }
-  .timer-label { font-size:13px; color:var(--muted); flex:1; }
-  .timer-val { font-family:var(--mono); font-size:14px; font-weight:700; color:var(--amber); }
-  .timer-track { flex:2; height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; }
-  .timer-fill { height:100%; background:var(--amber); border-radius:2px; transition:width 1s linear; }
-
-  /* Keypad */
-  .keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-  .key {
-    padding:16px 8px; border-radius:12px; background:var(--surface);
-    border:1px solid var(--border); font-family:var(--mono); font-size:20px; font-weight:700;
-    color:var(--text); cursor:pointer; text-align:center; transition:all 0.1s; user-select:none;
-  }
-  .key:active { background:var(--surface2); transform:scale(0.95); }
-  .key.del { color:var(--muted); font-size:16px; }
-  .key.ok { background:var(--accent); color:white; }
-  .key.neg { color:var(--accent2); }
-
-  /* Permission screen */
-  .perm-icon { font-size:56px; text-align:center; }
-  .perm-steps { display:flex; flex-direction:column; gap:10px; }
-  .perm-step { display:flex; align-items:flex-start; gap:12px; }
-  .perm-num { width:24px; height:24px; border-radius:50%; background:var(--accent); color:white; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
-  .perm-text { font-size:14px; color:var(--muted); line-height:1.5; }
-
-  /* Animations */
-  @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-  .screen.active { animation:slideIn 0.3s ease; }
-
-  /* No keypad on desktop */
-  @media(min-width:500px) { .keypad-wrap { display:none; } }
-
-  /* Dark scrollbar */
-  ::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+/* perm */
+.pstep{display:flex;align-items:flex-start;gap:10px}
+.pnum{width:21px;height:21px;border-radius:50%;background:var(--ac);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.ptxt{font-size:12px;color:var(--mu);line-height:1.55}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- SCREEN: HOME -->
-  <div class="screen active" id="screen-home">
-    <div class="badge"><div class="dot"></div> MathFlash</div>
-    <div>
-      <div class="title">Examen<br><span>Sorpresa</span></div>
+<!-- HOME -->
+<div class="screen active" id="sh">
+  <div class="sb" style="justify-content:center">
+    <div class="hero">
+      <h1>Math<span>Flash</span></h1>
+      <div class="hsub">Examen sorpresa en tu barra de notificaciones.<br>Tú eliges tablas, operaciones y horario.</div>
     </div>
-    <div class="subtitle">Notificaciones con preguntas de matemáticas en intervalos aleatorios. ¿Cuánto sabes?</div>
+    <button class="btn btn-p" id="b-home-cfg">Configurar y activar →</button>
+    <button class="btn btn-g" id="b-home-prac">Practicar ahora (sin notificaciones)</button>
+  </div>
+</div>
 
+<!-- CONFIG -->
+<div class="screen" id="sc">
+  <div class="tbar">
+    <div><div class="tbar-title">Configuración</div><div class="tbar-sub">Tablas, operaciones y horario</div></div>
+    <div class="ibtn" id="b-cfg-back">✕</div>
+  </div>
+  <div class="sb">
+
+    <!-- TABLAS -->
     <div class="card">
-      <div class="card-label">Intervalo aleatorio de notificaciones</div>
-      <div class="slider-row">
+      <div class="clbl">Tablas activas (elige del 2 al 100)</div>
+      <div class="tbl-ctrls">
+        <div class="tc" id="tc-all">Todas (2-100)</div>
+        <div class="tc" id="tc-none">Ninguna</div>
+        <div class="tc" id="tc-2-12">2 – 12</div>
+        <div class="tc" id="tc-2-20">2 – 20</div>
+        <div class="tc" id="tc-2-50">2 – 50</div>
+        <div class="tc" id="tc-prime">Solo primas</div>
+      </div>
+      <div class="cw"><div class="chips" id="chips"></div></div>
+      <div class="csub" id="tcount">0 tablas seleccionadas</div>
+    </div>
+
+    <!-- OPERACIONES -->
+    <div class="card">
+      <div class="clbl">Operaciones</div>
+      <div class="ops" id="ops">
+        <div class="op on" data-op="mult"><span class="sym">×</span>Multiplicación</div>
+        <div class="op on" data-op="div"><span class="sym">÷</span>División</div>
+        <div class="op on" data-op="add"><span class="sym">+</span>Suma</div>
+        <div class="op on" data-op="sub"><span class="sym">−</span>Resta</div>
+        <div class="op on" data-op="pow"><span class="sym">^</span>Exponente</div>
+        <div class="op on" data-op="sqrt"><span class="sym">√</span>Raíz cuadrada</div>
+        <div class="op on" data-op="ln"><span class="sym">ln</span>Logaritmo natural</div>
+        <div class="op on" data-op="exp"><span class="sym">eˣ</span>Exponencial</div>
+      </div>
+      <div class="csub">
+        <strong style="color:var(--mu2)">ln</strong> y <strong style="color:var(--mu2)">eˣ</strong>: ln(tabla) y e^tabla — un solo número.<br>
+        <strong style="color:var(--mu2)">√</strong>: raíz de tabla². &nbsp;<strong style="color:var(--mu2)">^</strong>: tabla^2 o tabla^3.
+      </div>
+    </div>
+
+    <!-- INTERVALO -->
+    <div class="card">
+      <div class="clbl">Intervalo aleatorio entre notificaciones</div>
+      <div class="sl-row">
         <label>Mín</label>
-        <input type="range" id="slider-min" min="1" max="59" value="5" step="1">
-        <div class="slider-val" id="val-min">5 min</div>
+        <input type="range" id="sl-mn" min="1" max="59" value="5" step="1">
+        <div class="sv" id="sv-mn">5m</div>
       </div>
-      <div class="slider-row">
+      <div class="sl-row">
         <label>Máx</label>
-        <input type="range" id="slider-max" min="2" max="60" value="30" step="1">
-        <div class="slider-val" id="val-max">30 min</div>
+        <input type="range" id="sl-mx" min="2" max="60" value="30" step="1">
+        <div class="sv" id="sv-mx">30m</div>
       </div>
-      <div class="slider-summary">Cada pregunta llegará en un momento<br><strong>aleatorio entre esos dos valores</strong></div>
+      <div class="csub" style="text-align:center">Rango completo: <strong style="color:var(--tx)">1 min → 1 hora</strong></div>
     </div>
 
+    <!-- HORARIO -->
     <div class="card">
-      <div class="card-label">Horario permitido</div>
-      <div class="schedule-row">
-        <div class="schedule-field">
-          <label>Desde</label>
-          <input type="time" id="sched-from" value="07:00">
-        </div>
-        <div class="schedule-field">
-          <label>Hasta</label>
-          <input type="time" id="sched-to" value="22:00">
-        </div>
+      <div class="clbl">Horario permitido</div>
+      <div class="sched">
+        <div class="sf"><label>Desde</label><input type="time" id="sf" value="07:00"></div>
+        <div class="sf"><label>Hasta</label><input type="time" id="st" value="22:00"></div>
       </div>
-      <div class="schedule-note">Fuera de este horario las notificaciones se pausan automáticamente y reanudan al inicio del siguiente día.</div>
+      <div class="csub">Fuera de este horario las notificaciones se pausan y reanudan solas al día siguiente a la hora de inicio.</div>
     </div>
 
-    <div class="card">
-      <div class="card-label">Tipos de pregunta</div>
-      <div class="type-grid">
-        <div class="type-tog on" data-type="mult">✕ Multiplicación</div>
-        <div class="type-tog on" data-type="div">÷ División</div>
-        <div class="type-tog on" data-type="pow">^ Potencias</div>
-        <div class="type-tog on" data-type="sqrt">√ Raíces</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-label">Rango de números</div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:13px;color:var(--muted)">Del</span>
-        <select id="range-from" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:10px;border-radius:10px;font-family:var(--sans);font-size:14px"></select>
-        <span style="font-size:13px;color:var(--muted)">al</span>
-        <select id="range-to" style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:10px;border-radius:10px;font-family:var(--sans);font-size:14px"></select>
-      </div>
-    </div>
-
-    <button class="btn btn-primary" id="btn-start">Activar notificaciones →</button>
-    <button class="btn btn-ghost" id="btn-practice">Practicar ahora sin notificaciones</button>
   </div>
+  <div class="btns">
+    <button class="btn btn-p" id="b-cfg-start">Activar notificaciones →</button>
+    <button class="btn btn-g" id="b-cfg-prac">Practicar ahora</button>
+  </div>
+</div>
 
-  <!-- SCREEN: PERMISSION -->
-  <div class="screen" id="screen-perm">
-    <div class="perm-icon">🔔</div>
-    <div class="title" style="text-align:center;font-size:32px">Activa<br>las notificaciones</div>
+<!-- PERMISSION -->
+<div class="screen" id="sp">
+  <div class="sb" style="justify-content:center;gap:16px">
+    <div style="font-size:50px;text-align:center;padding-top:8px">🔔</div>
+    <div style="text-align:center;font-size:24px;font-weight:800;line-height:1.1">Activa las<br>notificaciones</div>
     <div class="card">
-      <div class="perm-steps">
-        <div class="perm-step"><div class="perm-num">1</div><div class="perm-text">Aparecerá un diálogo del navegador pidiendo permiso para mostrar notificaciones</div></div>
-        <div class="perm-step"><div class="perm-num">2</div><div class="perm-text">Toca <strong>Permitir</strong> para recibir las preguntas en tu barra de notificaciones</div></div>
-        <div class="perm-step"><div class="perm-num">3</div><div class="perm-text">Para mejor experiencia: <strong>Instala esta página</strong> desde el menú del navegador → "Añadir a pantalla de inicio"</div></div>
+      <div style="display:flex;flex-direction:column;gap:11px">
+        <div class="pstep"><div class="pnum">1</div><div class="ptxt">El navegador pedirá permiso. Toca <strong>Permitir</strong>.</div></div>
+        <div class="pstep"><div class="pnum">2</div><div class="ptxt">Para recibir notificaciones con el teléfono bloqueado: menú del navegador → <strong>Añadir a pantalla de inicio</strong>.</div></div>
+        <div class="pstep"><div class="pnum">3</div><div class="ptxt">Una vez instalada como app, las notificaciones funcionan en segundo plano.</div></div>
       </div>
     </div>
-    <button class="btn btn-primary" id="btn-req-perm">Solicitar permiso →</button>
-    <button class="btn btn-ghost" id="btn-skip-perm">Continuar sin notificaciones</button>
   </div>
-
-  <!-- SCREEN: ACTIVE (waiting) -->
-  <div class="screen" id="screen-active">
-    <div class="badge"><div class="dot"></div> Activo</div>
-    <div class="title" style="text-align:center;font-size:30px">Modo notificaciones<br><span>activado</span></div>
-
-    <div class="stats-bar">
-      <div class="stat"><div class="stat-val green" id="s-correct">0</div><div class="stat-label">Correctas</div></div>
-      <div class="stat"><div class="stat-val red" id="s-wrong">0</div><div class="stat-label">Falladas</div></div>
-      <div class="stat"><div class="stat-val amber" id="s-pct">—</div><div class="stat-label">Racha</div></div>
-    </div>
-
-    <div class="sleeping-banner" id="sleeping-banner">
-      <span style="font-size:20px">🌙</span>
-      <div class="sleeping-banner-text" id="sleeping-text">Fuera del horario permitido. Las notificaciones se reanudan a las 07:00.</div>
-    </div>
-
-    <div class="timer-bar-wrap" id="timer-wrap">
-      <div class="timer-label">Próxima pregunta en</div>
-      <div class="timer-fill" id="timer-fill" style="width:100%"></div>
-      <div class="timer-val" id="timer-val">--:--</div>
-    </div>
-
-    <button class="btn btn-ghost" id="btn-now">Pregunta ahora mismo</button>
-    <button class="btn btn-ghost" id="btn-stop">Detener notificaciones</button>
+  <div class="btns">
+    <button class="btn btn-p" id="b-perm-ok">Solicitar permiso →</button>
+    <button class="btn btn-g" id="b-perm-skip">Continuar sin notificaciones</button>
   </div>
+</div>
 
-  <!-- SCREEN: QUESTION -->
-  <div class="screen" id="screen-q">
-    <div class="notif-header">
-      <div class="notif-icon">⚡</div>
-      <div><div class="notif-app">MathFlash</div><div style="font-size:13px;color:var(--text);margin-top:1px">Pregunta sorpresa</div></div>
-      <div class="notif-time" id="q-time">--:--</div>
+<!-- ACTIVE -->
+<div class="screen" id="sa">
+  <div class="tbar">
+    <div class="badge"><div class="dot"></div>Activo</div>
+    <div class="ibtn" id="b-act-cfg" title="Configuración">⚙</div>
+  </div>
+  <div class="sb">
+    <div class="sbar">
+      <div class="stat"><div class="sv2 gr" id="a-ok">0</div><div class="sl">Correctas</div></div>
+      <div class="stat"><div class="sv2 rd" id="a-no">0</div><div class="sl">Falladas</div></div>
+      <div class="stat"><div class="sv2 am" id="a-st">0🔥</div><div class="sl">Racha</div></div>
     </div>
+    <div class="zbanner" id="zbanner">
+      <span style="font-size:17px">🌙</span>
+      <div class="ztxt" id="ztxt">Fuera del horario. Las notificaciones se reanudan a las 07:00.</div>
+    </div>
+    <div class="tw" id="tw">
+      <div class="tlbl">Próxima en</div>
+      <div class="ttrack"><div class="tfill" id="tfill" style="width:100%"></div></div>
+      <div class="tval" id="tval">--:--</div>
+    </div>
+    <div style="font-size:10px;color:var(--mu);line-height:1.6" id="ainfo"></div>
+  </div>
+  <div class="btns">
+    <button class="btn btn-g" id="b-now">Pregunta ahora mismo</button>
+    <button class="btn btn-d" id="b-stop">Detener notificaciones</button>
+  </div>
+</div>
 
-    <div class="question-card">
-      <div class="q-decoration"></div>
-      <div class="q-type" id="q-type-label">Multiplicación</div>
-      <div class="q-text" id="q-text">7 × 8 = ?</div>
-      <div class="q-hint" id="q-hint"></div>
-      <div class="answer-wrap">
-        <input class="answer-input" id="answer-input" type="number" inputmode="none" placeholder="?" autocomplete="off">
-        <button class="btn btn-primary btn-send" id="btn-check">↵</button>
+<!-- QUESTION -->
+<div class="screen" id="sq">
+  <div style="padding:11px 16px 0;flex-shrink:0">
+    <div class="nbar">
+      <div class="nico">⚡</div>
+      <div><div class="napp">MathFlash</div><div style="font-size:12px;color:var(--tx);margin-top:1px">Pregunta sorpresa</div></div>
+      <div class="ntime" id="qt">--:--</div>
+    </div>
+  </div>
+  <div class="qscroll">
+    <div class="qcard">
+      <div class="qdeco"></div>
+      <div class="qop" id="qop">Multiplicación</div>
+      <div class="qtxt" id="qtxt">? = ?</div>
+      <div class="qhint" id="qhint"></div>
+      <div class="awrap">
+        <input class="ainp" id="ainp" type="number" inputmode="none" placeholder="?" autocomplete="off">
+        <button class="sbtn" id="b-check">↵</button>
       </div>
     </div>
-
-    <div class="feedback" id="feedback"></div>
-
-    <div class="keypad-wrap">
-      <div class="keypad" id="keypad">
+    <div class="fb" id="fb"></div>
+    <div class="kw">
+      <div class="kpad">
         <div class="key" data-k="7">7</div><div class="key" data-k="8">8</div><div class="key" data-k="9">9</div>
         <div class="key" data-k="4">4</div><div class="key" data-k="5">5</div><div class="key" data-k="6">6</div>
         <div class="key" data-k="1">1</div><div class="key" data-k="2">2</div><div class="key" data-k="3">3</div>
         <div class="key neg" data-k="-">±</div><div class="key" data-k="0">0</div><div class="key del" data-k="del">⌫</div>
-        <div class="key ok" data-k="ok" style="grid-column:1/-1;font-size:14px;letter-spacing:0.05em">COMPROBAR</div>
+        <div class="key" data-k=".">.</div><div class="key kok" data-k="ok" style="grid-column:2/4;font-size:12px">COMPROBAR</div>
       </div>
     </div>
-
-    <div class="stats-bar">
-      <div class="stat"><div class="stat-val green" id="q-correct">0</div><div class="stat-label">Correctas</div></div>
-      <div class="stat"><div class="stat-val red" id="q-wrong">0</div><div class="stat-label">Falladas</div></div>
-      <div class="stat"><div class="stat-val amber" id="q-streak">0</div><div class="stat-label">Racha</div></div>
+    <div class="qsc">
+      <div class="stat"><div class="sv2 gr" id="q-ok">0</div><div class="sl">Correctas</div></div>
+      <div class="stat"><div class="sv2 rd" id="q-no">0</div><div class="sl">Falladas</div></div>
+      <div class="stat"><div class="sv2 am" id="q-st">0</div><div class="sl">Racha</div></div>
     </div>
-
-    <button class="btn btn-ghost" id="btn-skip">Siguiente pregunta →</button>
-    <button class="btn btn-ghost" id="btn-back-home">‹ Volver al menú</button>
   </div>
-
+  <div class="btns" style="padding-top:0">
+    <button class="btn btn-g" id="b-next">Siguiente pregunta →</button>
+    <button class="btn btn-g" id="b-qback">‹ Volver</button>
+  </div>
 </div>
 
+</div>
 <script>
-// ========== STATE ==========
-const state = {
-  intervalMin: 5, intervalMax: 30,
-  schedFrom: '07:00', schedTo: '22:00',
-  types: ['mult','div','pow','sqrt'],
-  rangeFrom: 2, rangeTo: 20,
-  correct: 0, wrong: 0, streak: 0,
-  timerID: null, timerStart: null, timerDuration: 0,
-  currentAnswer: null, currentQuestion: null,
-  notifMode: false, answered: false, sleeping: false
+// ═══ CONFIG STATE ═══
+const C={
+  tables:new Set([2,3,4,5,6,7,8,9,10,11,12]),
+  ops:new Set(['mult','div','add','sub','pow','sqrt','ln','exp']),
+  mn:5,mx:30,from:'07:00',to:'22:00'
 };
+const R={ok:0,no:0,st:0,tid:null,nid:null,ts:null,td:0,sleep:false,nm:false,done:false,q:null,ss:null};
+const PRIMES=[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97];
 
-// ========== INIT ==========
-function init() {
-  // Range selects
-  const fs = document.getElementById('range-from');
-  const ts = document.getElementById('range-to');
-  for(let i=2;i<=20;i++) { fs.innerHTML+=`<option value="${i}">${i}</option>`; ts.innerHTML+=`<option value="${i}" ${i==20?'selected':''}>${i}</option>`; }
-
-  // Sliders
-  const slMin=document.getElementById('slider-min'), slMax=document.getElementById('slider-max');
-  const vMin=document.getElementById('val-min'), vMax=document.getElementById('val-max');
-  function fmtMins(m){return m<60?`${m} min`:`${Math.floor(m/60)}h ${m%60?m%60+'m':''}`;}
-  function syncSliders(){
-    let mn=+slMin.value, mx=+slMax.value;
-    if(mn>=mx){mx=mn+1; slMax.value=mx;}
-    state.intervalMin=mn; state.intervalMax=mx;
-    vMin.textContent=fmtMins(mn); vMax.textContent=fmtMins(mx);
+// ═══ BUILD CHIPS ═══
+function buildChips(){
+  const w=document.getElementById('chips');
+  for(let i=2;i<=100;i++){
+    const c=document.createElement('div');
+    c.className='chip'+(C.tables.has(i)?' on':'');
+    c.dataset.n=i;c.textContent=i;
+    c.addEventListener('click',()=>{
+      if(C.tables.has(i)){C.tables.delete(i);c.classList.remove('on');}
+      else{C.tables.add(i);c.classList.add('on');}
+      updTCount();
+    });
+    w.appendChild(c);
   }
-  slMin.addEventListener('input',syncSliders);
-  slMax.addEventListener('input',syncSliders);
-  syncSliders();
+  updTCount();
+}
 
-  // Schedule inputs
-  document.getElementById('sched-from').addEventListener('change',e=>state.schedFrom=e.target.value);
-  document.getElementById('sched-to').addEventListener('change',e=>state.schedTo=e.target.value);
+function setTables(from,to){
+  C.tables.clear();
+  for(let i=from;i<=to;i++)C.tables.add(i);
+  document.querySelectorAll('.chip').forEach(c=>{
+    const n=+c.dataset.n;
+    c.classList.toggle('on',C.tables.has(n));
+  });
+  updTCount();
+}
 
-  // Type toggles
-  document.querySelectorAll('.type-tog').forEach(t=>{
-    t.addEventListener('click',()=>{
-      const type=t.dataset.type;
-      if(t.classList.contains('on')) {
-        const remaining=state.types.filter(x=>x!==type);
-        if(remaining.length===0) return;
-        state.types=remaining; t.classList.remove('on');
-      } else { state.types.push(type); t.classList.add('on'); }
+function setPrimeTables(){
+  C.tables=new Set(PRIMES);
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.classList.toggle('on',C.tables.has(+c.dataset.n));
+  });
+  updTCount();
+}
+
+function updTCount(){
+  const n=C.tables.size;
+  document.getElementById('tcount').textContent=`${n} tabla${n!==1?'s':''} seleccionada${n!==1?'s':''}`;
+}
+
+// ═══ INIT ═══
+function init(){
+  buildChips();
+
+  // table preset buttons
+  document.getElementById('tc-all').onclick=()=>setTables(2,100);
+  document.getElementById('tc-none').onclick=()=>{C.tables.clear();document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));updTCount();};
+  document.getElementById('tc-2-12').onclick=()=>setTables(2,12);
+  document.getElementById('tc-2-20').onclick=()=>setTables(2,20);
+  document.getElementById('tc-2-50').onclick=()=>setTables(2,50);
+  document.getElementById('tc-prime').onclick=()=>setPrimeTables();
+
+  // sliders
+  const smn=document.getElementById('sl-mn'),smx=document.getElementById('sl-mx');
+  const svmn=document.getElementById('sv-mn'),svmx=document.getElementById('sv-mx');
+  function fmtM(m){return m<60?`${m}m`:`${Math.floor(m/60)}h${m%60?m%60+'m':''}`}
+  function syncSl(){
+    let a=+smn.value,b=+smx.value;
+    if(a>=b){b=a+1;smx.value=b;}
+    C.mn=a;C.mx=b;svmn.textContent=fmtM(a);svmx.textContent=fmtM(b);
+  }
+  smn.addEventListener('input',syncSl);smx.addEventListener('input',syncSl);syncSl();
+
+  // ops
+  document.getElementById('ops').addEventListener('click',e=>{
+    const p=e.target.closest('.op');if(!p)return;
+    const op=p.dataset.op;
+    if(p.classList.contains('on')){
+      if([...C.ops].filter(x=>x!==op).length===0)return;
+      C.ops.delete(op);p.classList.remove('on');
+    }else{C.ops.add(op);p.classList.add('on');}
+  });
+
+  // schedule
+  document.getElementById('sf').addEventListener('change',e=>C.from=e.target.value);
+  document.getElementById('st').addEventListener('change',e=>C.to=e.target.value);
+
+  // nav
+  document.getElementById('b-home-cfg').onclick=()=>go('sc');
+  document.getElementById('b-home-prac').onclick=()=>{R.nm=false;showQ();};
+  document.getElementById('b-cfg-back').onclick=()=>go('sh');
+  document.getElementById('b-cfg-start').onclick=()=>go('sp');
+  document.getElementById('b-cfg-prac').onclick=()=>{R.nm=false;showQ();};
+  document.getElementById('b-perm-ok').onclick=reqPerm;
+  document.getElementById('b-perm-skip').onclick=()=>startActive();
+  document.getElementById('b-act-cfg').onclick=()=>go('sc');
+  document.getElementById('b-now').onclick=()=>showQ();
+  document.getElementById('b-stop').onclick=()=>{killTimers();go('sh');};
+  document.getElementById('b-check').onclick=checkAns;
+  document.getElementById('b-next').onclick=()=>{R.done=false;showQ();};
+  document.getElementById('b-qback').onclick=()=>go(R.nm?'sa':'sh');
+
+  // keypad
+  document.querySelectorAll('.key').forEach(k=>{
+    k.addEventListener('click',()=>{
+      const v=k.dataset.k,inp=document.getElementById('ainp');
+      if(v==='ok'){checkAns();return;}
+      if(v==='del'){inp.value=inp.value.slice(0,-1);return;}
+      if(v==='-'){inp.value=inp.value.startsWith('-')?inp.value.slice(1):'-'+inp.value;return;}
+      if(v==='.'&&inp.value.includes('.'))return;
+      if(inp.value.replace(/[-\.]/g,'').length<8)inp.value+=v;
     });
   });
-
-  // Range
-  fs.addEventListener('change',()=>state.rangeFrom=+fs.value);
-  ts.addEventListener('change',()=>state.rangeTo=+ts.value);
-
-  // Buttons
-  document.getElementById('btn-start').onclick=()=>showScreen('screen-perm');
-  document.getElementById('btn-practice').onclick=()=>{ state.notifMode=false; showQ(); };
-  document.getElementById('btn-req-perm').onclick=reqPerm;
-  document.getElementById('btn-skip-perm').onclick=()=>{ state.notifMode=true; startActive(); };
-  document.getElementById('btn-now').onclick=()=>showQ();
-  document.getElementById('btn-stop').onclick=()=>{ clearTimer(); showScreen('screen-home'); };
-  document.getElementById('btn-check').onclick=checkAnswer;
-  document.getElementById('btn-skip').onclick=()=>{ state.answered=false; showQ(); };
-  document.getElementById('btn-back-home').onclick=()=>{ if(state.notifMode) showScreen('screen-active'); else showScreen('screen-home'); };
-
-  // Keypad
-  document.getElementById('keypad').addEventListener('click', e=>{
-    const k=e.target.closest('.key'); if(!k) return;
-    const v=k.dataset.k; const inp=document.getElementById('answer-input');
-    if(v==='ok'){checkAnswer();return;}
-    if(v==='del'){inp.value=inp.value.slice(0,-1);return;}
-    if(v==='-'){inp.value=inp.value.startsWith('-')?inp.value.slice(1):'-'+inp.value;return;}
-    if(inp.value.length<6) inp.value+=v;
-  });
-
-  document.getElementById('answer-input').addEventListener('keydown',e=>{ if(e.key==='Enter') checkAnswer(); });
-  document.getElementById('q-time').textContent=fmtTime();
+  document.getElementById('ainp').addEventListener('keydown',e=>{if(e.key==='Enter')checkAns();});
 }
 
-// ========== SCHEDULE CHECK ==========
-function isWithinSchedule() {
-  const now=new Date();
-  const cur=now.getHours()*60+now.getMinutes();
-  const [fh,fm]=state.schedFrom.split(':').map(Number);
-  const [th,tm]=state.schedTo.split(':').map(Number);
-  const from=fh*60+fm, to=th*60+tm;
-  if(from<=to) return cur>=from && cur<to;
-  return cur>=from || cur<to; // overnight
-}
-
-// Returns ms until schedule starts (next day if needed)
-function msUntilScheduleStart() {
-  const now=new Date();
-  const [fh,fm]=state.schedFrom.split(':').map(Number);
-  const next=new Date(now);
-  next.setHours(fh,fm,0,0);
-  if(next<=now) next.setDate(next.getDate()+1);
-  return next-now;
-}
-
-function fmtHHMM(hhmm){ const [h,m]=hhmm.split(':'); return `${h}:${m}`; }
-
-// ========== NAVIGATION ==========
-function showScreen(id) {
+// ═══ NAV ═══
+function go(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-// ========== PERMISSIONS ==========
-async function reqPerm() {
-  if(!('Notification' in window)) { alert('Tu navegador no soporta notificaciones.'); startActive(); return; }
-  await Notification.requestPermission();
+// ═══ PERMISSIONS ═══
+async function reqPerm(){
+  if('Notification'in window)await Notification.requestPermission();
   startActive();
 }
 
-function sendNotif(question) {
-  if(Notification.permission==='granted') {
+function sendNotif(q){
+  if(Notification.permission==='granted'){
     const n=new Notification('⚡ MathFlash — Pregunta sorpresa',{
-      body: question.text+' = ?',
-      icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%237b6cff"/><text y="45" x="10" font-size="38" fill="white">⚡</text></svg>',
-      tag:'mathflash', requireInteraction:true, silent:false
+      body:q.disp+' = ?',
+      icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%237b6cff"/><text y="44" x="9" font-size="36" fill="white">⚡</text></svg>',
+      tag:'mf',requireInteraction:true,silent:false
     });
-    n.onclick=()=>{ window.focus(); showQ(question); n.close(); };
-  } else {
-    showQ(question);
-  }
+    n.onclick=()=>{window.focus();showQ(q);n.close();};
+  }else showQ(q);
 }
 
-// ========== TIMER ==========
-function startActive() {
-  state.notifMode=true;
-  updateStats();
-  showScreen('screen-active');
-  scheduleNext();
+// ═══ ACTIVE ═══
+function startActive(){
+  R.nm=true;updStats();
+  const t=[...C.tables].sort((a,b)=>a-b);
+  const preview=t.slice(0,6).join(', ')+(t.length>6?`… (+${t.length-6})`:'');
+  document.getElementById('ainfo').textContent=`Tablas: ${preview} · Operaciones: ${[...C.ops].join(', ')} · ${C.mn}–${C.mx} min`;
+  go('sa');schedNext();
 }
 
-function scheduleNext() {
-  clearTimer();
+function inSched(){
+  const now=new Date(),cur=now.getHours()*60+now.getMinutes();
+  const[fh,fm]=C.from.split(':').map(Number),[th,tm]=C.to.split(':').map(Number);
+  const f=fh*60+fm,t=th*60+tm;
+  return f<=t?cur>=f&&cur<t:cur>=f||cur<t;
+}
 
-  if(!isWithinSchedule()) {
-    // Sleep until schedule starts
-    state.sleeping=true;
-    const ms=msUntilScheduleStart();
-    updateSleepUI(true);
-    state._nextFire=setTimeout(()=>{ state.sleeping=false; updateSleepUI(false); scheduleNext(); }, ms);
-    // Still tick the clock every minute for UI
-    state.timerID=setInterval(()=>{ updateTimerBar(ms-(Date.now()-state._sleepStart)); }, 60000);
-    state._sleepStart=Date.now();
-    // Show time remaining until wake
-    updateTimerBar(ms);
+function msWake(){
+  const now=new Date(),[fh,fm]=C.from.split(':').map(Number);
+  const nxt=new Date(now);nxt.setHours(fh,fm,0,0);
+  if(nxt<=now)nxt.setDate(nxt.getDate()+1);
+  return nxt-now;
+}
+
+function schedNext(){
+  killTimers();
+  if(!inSched()){
+    R.sleep=true;setSleep(true);
+    const ms=msWake();R.ss=Date.now();
+    setTDisp(ms,ms);
+    R.tid=setInterval(()=>setTDisp(Math.max(0,ms-(Date.now()-R.ss)),ms),1000);
+    R.nid=setTimeout(()=>{R.sleep=false;setSleep(false);schedNext();},ms);
     return;
   }
-
-  state.sleeping=false;
-  updateSleepUI(false);
-
-  const mins=state.intervalMin+Math.random()*(state.intervalMax-state.intervalMin);
+  R.sleep=false;setSleep(false);
+  const mins=C.mn+Math.random()*(C.mx-C.mn);
   let ms=mins*60*1000;
-
-  // Clamp to end of schedule window if needed
-  const now=new Date();
-  const [th,tm]=state.schedTo.split(':').map(Number);
-  const schedEnd=new Date(now); schedEnd.setHours(th,tm,0,0);
-  if(schedEnd<=now) schedEnd.setDate(schedEnd.getDate()+1);
-  const msToEnd=schedEnd-now;
-  if(ms>msToEnd) ms=msToEnd; // fire right at window end then sleep
-
-  state.timerStart=Date.now(); state.timerDuration=ms;
-  updateTimerBar(ms);
-  state.timerID=setInterval(()=>updateTimerBar(), 1000);
-  state._nextFire=setTimeout(()=>{
-    const q=genQuestion();
-    sendNotif(q);
-    scheduleNext();
-  }, ms);
+  const now=new Date(),[th,tm]=C.to.split(':').map(Number);
+  const end=new Date(now);end.setHours(th,tm,0,0);
+  if(end<=now)end.setDate(end.getDate()+1);
+  ms=Math.min(ms,end-now);
+  R.ts=Date.now();R.td=ms;
+  setTDisp(ms,ms);
+  R.tid=setInterval(()=>setTDisp(Math.max(0,ms-(Date.now()-R.ts)),ms),1000);
+  R.nid=setTimeout(()=>{sendNotif(genQ());schedNext();},ms);
 }
 
-function clearTimer() {
-  if(state.timerID) clearInterval(state.timerID);
-  if(state._nextFire) clearTimeout(state._nextFire);
-  state.timerID=null; state._nextFire=null;
+function killTimers(){
+  if(R.tid)clearInterval(R.tid);
+  if(R.nid)clearTimeout(R.nid);
+  R.tid=null;R.nid=null;
 }
 
-function updateSleepUI(sleeping) {
-  const banner=document.getElementById('sleeping-banner');
-  const wrap=document.getElementById('timer-wrap');
-  if(sleeping){
-    banner.classList.add('show');
-    document.getElementById('sleeping-text').textContent=`Fuera del horario. Las notificaciones se reanudan a las ${fmtHHMM(state.schedFrom)}.`;
-    wrap.style.opacity='0.4';
-  } else {
-    banner.classList.remove('show');
-    wrap.style.opacity='1';
-  }
+function setTDisp(rem,total){
+  const pct=total>0?(rem/total)*100:0;
+  document.getElementById('tfill').style.width=pct+'%';
+  const s=Math.round(rem/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;
+  document.getElementById('tval').textContent=h>0?`${h}h${m}m`:m>0?`${m}:${ss.toString().padStart(2,'0')}`:`0:${ss.toString().padStart(2,'0')}`;
 }
 
-function updateTimerBar(forceMs) {
-  if(!state.timerStart && forceMs===undefined) return;
-  const elapsed=state.timerStart?Date.now()-state.timerStart:0;
-  const total=forceMs!==undefined?forceMs:state.timerDuration;
-  const remaining=forceMs!==undefined?forceMs:Math.max(0,state.timerDuration-elapsed);
-  const pct=total>0?(remaining/total)*100:0;
-  document.getElementById('timer-fill').style.width=pct+'%';
-  const s=Math.round(remaining/1000);
-  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
-  let label='';
-  if(h>0) label=`${h}h ${m}m`;
-  else if(m>0) label=`${m}:${ss.toString().padStart(2,'0')}`;
-  else label=`0:${ss.toString().padStart(2,'0')}`;
-  document.getElementById('timer-val').textContent=label;
+function setSleep(on){
+  document.getElementById('zbanner').classList.toggle('show',on);
+  document.getElementById('tw').style.opacity=on?'0.3':'1';
+  if(on){const[fh,fm]=C.from.split(':');document.getElementById('ztxt').textContent=`Fuera del horario permitido. Las notificaciones se reanudan a las ${fh}:${fm}.`;}
 }
 
-// ========== QUESTION GENERATOR ==========
+// ═══ QUESTION GEN ═══
 function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(arr){return arr[rnd(0,arr.length-1)];}
+function r2(x){return Math.round(x*100)/100;}
 
-function genQuestion() {
-  const types=state.types;
-  const t=types[rnd(0,types.length-1)];
-  const from=Math.max(2,state.rangeFrom), to=Math.min(20,Math.max(from,state.rangeTo));
-  let a,b,text,ans,typeLabel,hint='';
+function genQ(){
+  if(!C.tables.size||!C.ops.size)return{disp:'2 × 2',ans:4,op:'Multiplicación',hint:'',tol:.01};
+  const tbls=[...C.tables];
+  const ops=[...C.ops];
+  const op=pick(ops);
+  let a,b,disp,ans,oplbl,hint='',tol=.01;
 
-  if(t==='mult') {
-    a=rnd(from,to); b=rnd(from,to);
-    ans=a*b; text=`${a} × ${b}`; typeLabel='Multiplicación';
-  } else if(t==='div') {
-    b=rnd(from,to); ans=rnd(from,to); a=b*ans;
-    text=`${a} ÷ ${b}`; typeLabel='División'; hint=`(resultado exacto)`;
-  } else if(t==='pow') {
-    a=rnd(from,Math.min(to,12)); b=rnd(2,3);
-    ans=Math.pow(a,b); text=`${a} ^ ${b}`; typeLabel=`Potencia (${a}${b===2?'²':'³'})`;
-  } else {
-    ans=rnd(from,Math.min(to,14)); a=ans*ans;
-    text=`√${a}`; typeLabel='Raíz cuadrada'; hint=`raíz de ${a}`;
+  if(op==='mult'){
+    a=pick(tbls);b=pick(tbls);
+    ans=a*b;disp=`${a} × ${b}`;oplbl='Multiplicación';
+  }else if(op==='div'){
+    a=pick(tbls);b=pick(tbls);
+    ans=a;disp=`${a*b} ÷ ${b}`;oplbl='División';hint='resultado exacto';
+  }else if(op==='add'){
+    a=pick(tbls);b=pick(tbls);
+    ans=a+b;disp=`${a} + ${b}`;oplbl='Suma';
+  }else if(op==='sub'){
+    a=pick(tbls);b=pick(tbls);
+    if(a<b){const t=a;a=b;b=t;}
+    ans=a-b;disp=`${a} − ${b}`;oplbl='Resta';
+  }else if(op==='pow'){
+    a=pick(tbls);b=rnd(2,3);
+    ans=Math.pow(a,b);
+    disp=`${a}${b===2?'²':'³'}`;oplbl=`Potencia (${a}^${b})`;
+  }else if(op==='sqrt'){
+    a=pick(tbls);
+    ans=a;disp=`√${a*a}`;oplbl='Raíz cuadrada';hint=`raíz de ${a*a}`;
+  }else if(op==='ln'){
+    a=pick(tbls);
+    ans=r2(Math.log(a));disp=`ln(${a})`;oplbl='Logaritmo natural';hint='redondea a 2 decimales';tol=.06;
+  }else if(op==='exp'){
+    a=pick(tbls);
+    ans=r2(Math.exp(a));disp=`e^${a}`;oplbl='Exponencial (eˣ)';hint='redondea a 2 decimales';tol=r2(Math.exp(a))*.01+.1;
   }
-
-  return { text, ans, typeLabel, hint };
+  return{disp,ans,oplbl,hint,tol};
 }
 
-// ========== SHOW QUESTION ==========
-function showQ(q) {
-  const question=q||genQuestion();
-  state.currentQuestion=question;
-  state.currentAnswer=question.ans;
-  state.answered=false;
-
-  document.getElementById('q-type-label').textContent=question.typeLabel;
-  document.getElementById('q-text').textContent=question.text+' = ?';
-  document.getElementById('q-hint').textContent=question.hint||'';
-  document.getElementById('q-time').textContent=fmtTime();
-  document.getElementById('answer-input').value='';
-  document.getElementById('answer-input').className='answer-input';
-  document.getElementById('feedback').className='feedback';
-  document.getElementById('feedback').textContent='';
-
-  updateQStats();
-  showScreen('screen-q');
-  setTimeout(()=>document.getElementById('answer-input').focus(),300);
+// ═══ SHOW Q ═══
+function showQ(q){
+  const qq=q||genQ();R.q=qq;R.done=false;
+  document.getElementById('qop').textContent=qq.oplbl;
+  document.getElementById('qtxt').textContent=qq.disp+' = ?';
+  document.getElementById('qhint').textContent=qq.hint||'';
+  document.getElementById('qt').textContent=fmtNow();
+  const inp=document.getElementById('ainp');
+  inp.value='';inp.className='ainp';
+  const fb=document.getElementById('fb');fb.className='fb';fb.textContent='';
+  updQStats();go('sq');
+  setTimeout(()=>inp.focus(),220);
 }
 
-// ========== CHECK ANSWER ==========
-function checkAnswer() {
-  if(state.answered) return;
-  const val=document.getElementById('answer-input').value.trim();
-  if(val===''||isNaN(val)) return;
-  const userAns=parseFloat(val);
-  const inp=document.getElementById('answer-input');
-  const fb=document.getElementById('feedback');
-  state.answered=true;
-
-  if(Math.abs(userAns-state.currentAnswer)<0.01) {
-    state.correct++; state.streak++;
-    inp.classList.add('correct');
-    fb.textContent=`✓ ¡Correcto! ${state.currentQuestion.text} = ${state.currentAnswer}`;
-    fb.className='feedback show correct';
-  } else {
-    state.wrong++; state.streak=0;
-    inp.classList.add('wrong');
-    fb.textContent=`✗ Incorrecto. La respuesta es ${state.currentAnswer}`;
-    fb.className='feedback show wrong';
-  }
-  if(state.notifMode) updateStats();
-  updateQStats();
+// ═══ CHECK ═══
+function checkAns(){
+  if(R.done)return;
+  const v=document.getElementById('ainp').value.trim();
+  if(v===''||isNaN(v))return;
+  const u=parseFloat(v);
+  const inp=document.getElementById('ainp'),fb=document.getElementById('fb');
+  R.done=true;
+  const cor=Math.abs(u-R.q.ans)<=R.q.tol;
+  if(cor){R.ok++;R.st++;inp.classList.add('ok');fb.textContent=`✓ ¡Correcto! ${R.q.disp} = ${R.q.ans}`;fb.className='fb show ok';}
+  else{R.no++;R.st=0;inp.classList.add('no');fb.textContent=`✗ Incorrecto. La respuesta es ${R.q.ans}`;fb.className='fb show no';}
+  updStats();updQStats();
 }
 
-// ========== STATS ==========
-function updateStats() {
-  document.getElementById('s-correct').textContent=state.correct;
-  document.getElementById('s-wrong').textContent=state.wrong;
-  document.getElementById('s-pct').textContent=state.streak+'🔥';
+// ═══ STATS ═══
+function updStats(){
+  document.getElementById('a-ok').textContent=R.ok;
+  document.getElementById('a-no').textContent=R.no;
+  document.getElementById('a-st').textContent=R.st+'🔥';
 }
-function updateQStats() {
-  document.getElementById('q-correct').textContent=state.correct;
-  document.getElementById('q-wrong').textContent=state.wrong;
-  document.getElementById('q-streak').textContent=state.streak;
+function updQStats(){
+  document.getElementById('q-ok').textContent=R.ok;
+  document.getElementById('q-no').textContent=R.no;
+  document.getElementById('q-st').textContent=R.st;
 }
-
-// ========== UTILS ==========
-function fmtTime() {
-  const n=new Date();
-  return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
-}
+function fmtNow(){const n=new Date();return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');}
 
 init();
 </script>
