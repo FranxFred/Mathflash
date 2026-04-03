@@ -52,8 +52,9 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--san
 .btns{display:flex;flex-direction:column;gap:9px;padding:0 16px 20px;flex-shrink:0}
 
 /* sliders */
+.sl-wrap{display:flex;flex-direction:column;margin-bottom:0}
 .sl-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
-.sl-row:last-of-type{margin-bottom:0}
+.sl-row:last-child{margin-bottom:0}
 .sl-row label{font-size:11px;color:var(--mu);width:28px;flex-shrink:0}
 .sl-row input[type=range]{flex:1;accent-color:var(--ac);cursor:pointer}
 .sv{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ac);background:rgba(123,108,255,.12);border:1px solid rgba(123,108,255,.2);border-radius:6px;padding:3px 8px;min-width:48px;text-align:center;flex-shrink:0}
@@ -209,17 +210,37 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--san
     <!-- INTERVALO -->
     <div class="card">
       <div class="clbl">Intervalo aleatorio entre notificaciones</div>
-      <div class="sl-row">
-        <label>Mín</label>
-        <input type="range" id="sl-mn" min="1" max="59" value="5" step="1">
-        <div class="sv" id="sv-mn">5m</div>
-      </div>
-      <div class="sl-row">
-        <label>Máx</label>
-        <input type="range" id="sl-mx" min="2" max="60" value="30" step="1">
-        <div class="sv" id="sv-mx">30m</div>
+      <div class="sl-wrap">
+        <div class="sl-row">
+          <label>Mín</label>
+          <input type="range" id="sl-mn" min="1" max="59" value="5" step="1">
+          <div class="sv" id="sv-mn">5m</div>
+        </div>
+        <div class="sl-row">
+          <label>Máx</label>
+          <input type="range" id="sl-mx" min="2" max="60" value="30" step="1">
+          <div class="sv" id="sv-mx">30m</div>
+        </div>
       </div>
       <div class="csub" style="text-align:center">Rango completo: <strong style="color:var(--tx)">1 min → 1 hora</strong></div>
+    </div>
+
+    <!-- FACTOR -->
+    <div class="card">
+      <div class="clbl">Rango del factor (segunda cifra)</div>
+      <div class="sl-wrap">
+        <div class="sl-row">
+          <label>Mín</label>
+          <input type="range" id="sl-fmn" min="1" max="99" value="2" step="1">
+          <div class="sv" id="sv-fmn">2</div>
+        </div>
+        <div class="sl-row">
+          <label>Máx</label>
+          <input type="range" id="sl-fmx" min="2" max="100" value="12" step="1">
+          <div class="sv" id="sv-fmx">12</div>
+        </div>
+      </div>
+      <div class="csub">Ej: tabla del 7, factor 2–100 → 7×2, 7×3 … 7×100</div>
     </div>
 
     <!-- HORARIO -->
@@ -303,7 +324,7 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--san
       <div class="qtxt" id="qtxt">? = ?</div>
       <div class="qhint" id="qhint"></div>
       <div class="awrap">
-        <input class="ainp" id="ainp" type="number" inputmode="none" placeholder="?" autocomplete="off">
+        <input class="ainp" id="ainp" type="text" inputmode="none" placeholder="?" autocomplete="off">
         <button class="sbtn" id="b-check">↵</button>
       </div>
     </div>
@@ -335,7 +356,8 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--san
 const C={
   tables:new Set([2,3,4,5,6,7,8,9,10,11,12]),
   ops:new Set(['mult','div','add','sub','pow','sqrt','ln','exp']),
-  mn:5,mx:30,from:'07:00',to:'22:00'
+  mn:5,mx:30,from:'07:00',to:'22:00',
+  fmn:2,fmx:12
 };
 const R={ok:0,no:0,st:0,tid:null,nid:null,ts:null,td:0,sleep:false,nm:false,done:false,q:null,ss:null};
 const PRIMES=[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97];
@@ -348,8 +370,10 @@ function buildChips(){
     c.className='chip'+(C.tables.has(i)?' on':'');
     c.dataset.n=i;c.textContent=i;
     c.addEventListener('click',()=>{
-      if(C.tables.has(i)){C.tables.delete(i);c.classList.remove('on');}
-      else{C.tables.add(i);c.classList.add('on');}
+      if(C.tables.has(i)){
+        if(C.tables.size<=1)return; // never go below 1
+        C.tables.delete(i);c.classList.remove('on');
+      }else{C.tables.add(i);c.classList.add('on');}
       updTCount();
     });
     w.appendChild(c);
@@ -386,7 +410,11 @@ function init(){
 
   // table preset buttons
   document.getElementById('tc-all').onclick=()=>setTables(2,100);
-  document.getElementById('tc-none').onclick=()=>{C.tables.clear();document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));updTCount();};
+  document.getElementById('tc-none').onclick=()=>{
+    C.tables.clear();C.tables.add(2);
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',+c.dataset.n===2));
+    updTCount();
+  };
   document.getElementById('tc-2-12').onclick=()=>setTables(2,12);
   document.getElementById('tc-2-20').onclick=()=>setTables(2,20);
   document.getElementById('tc-2-50').onclick=()=>setTables(2,50);
@@ -402,6 +430,15 @@ function init(){
     C.mn=a;C.mx=b;svmn.textContent=fmtM(a);svmx.textContent=fmtM(b);
   }
   smn.addEventListener('input',syncSl);smx.addEventListener('input',syncSl);syncSl();
+
+  const sfmn=document.getElementById('sl-fmn'),sfmx=document.getElementById('sl-fmx');
+  const svfmn=document.getElementById('sv-fmn'),svfmx=document.getElementById('sv-fmx');
+  function syncF(){
+    let a=+sfmn.value,b=+sfmx.value;
+    if(a>=b){b=a+1;sfmx.value=b;}
+    C.fmn=a;C.fmx=b;svfmn.textContent=a;svfmx.textContent=b;
+  }
+  sfmn.addEventListener('input',syncF);sfmx.addEventListener('input',syncF);syncF();
 
   // ops
   document.getElementById('ops').addEventListener('click',e=>{
@@ -419,15 +456,15 @@ function init(){
 
   // nav
   document.getElementById('b-home-cfg').onclick=()=>go('sc');
-  document.getElementById('b-home-prac').onclick=()=>{R.nm=false;showQ();};
-  document.getElementById('b-cfg-back').onclick=()=>go('sh');
+  document.getElementById('b-home-prac').onclick=()=>{killTimers();R.nm=false;showQ();};
+  document.getElementById('b-cfg-back').onclick=()=>go(R.nm?'sa':'sh');
   document.getElementById('b-cfg-start').onclick=()=>go('sp');
-  document.getElementById('b-cfg-prac').onclick=()=>{R.nm=false;showQ();};
+  document.getElementById('b-cfg-prac').onclick=()=>{killTimers();R.nm=false;showQ();};
   document.getElementById('b-perm-ok').onclick=reqPerm;
   document.getElementById('b-perm-skip').onclick=()=>startActive();
   document.getElementById('b-act-cfg').onclick=()=>go('sc');
-  document.getElementById('b-now').onclick=()=>showQ();
-  document.getElementById('b-stop').onclick=()=>{killTimers();go('sh');};
+  document.getElementById('b-now').onclick=()=>{showQ();killTimers();schedNext();};
+  document.getElementById('b-stop').onclick=()=>{killTimers();R.nm=false;go('sh');};
   document.getElementById('b-check').onclick=checkAns;
   document.getElementById('b-next').onclick=()=>{R.done=false;showQ();};
   document.getElementById('b-qback').onclick=()=>go(R.nm?'sa':'sh');
@@ -440,7 +477,7 @@ function init(){
       if(v==='del'){inp.value=inp.value.slice(0,-1);return;}
       if(v==='-'){inp.value=inp.value.startsWith('-')?inp.value.slice(1):'-'+inp.value;return;}
       if(v==='.'&&inp.value.includes('.'))return;
-      if(inp.value.replace(/[-\.]/g,'').length<8)inp.value+=v;
+      if(inp.value.replace(/[-\.]/g,'').length<16)inp.value+=v;
     });
   });
   document.getElementById('ainp').addEventListener('keydown',e=>{if(e.key==='Enter')checkAns();});
@@ -474,7 +511,8 @@ function startActive(){
   R.nm=true;updStats();
   const t=[...C.tables].sort((a,b)=>a-b);
   const preview=t.slice(0,6).join(', ')+(t.length>6?`… (+${t.length-6})`:'');
-  document.getElementById('ainfo').textContent=`Tablas: ${preview} · Operaciones: ${[...C.ops].join(', ')} · ${C.mn}–${C.mx} min`;
+  const opSyms={mult:'×',div:'÷',add:'+',sub:'−',pow:'^',sqrt:'√',ln:'ln',exp:'eˣ'};
+  document.getElementById('ainfo').textContent=`Tablas: ${preview} · Ops: ${[...C.ops].map(o=>opSyms[o]||o).join(' ')} · ${C.mn}–${C.mx} min`;
   go('sa');schedNext();
 }
 
@@ -540,84 +578,46 @@ function pick(arr){return arr[rnd(0,arr.length-1)];}
 function r2(x){return Math.round(x*100)/100;}
 
 function genQ(){
-  if(!C.tables.size||!C.ops.size)return{disp:'2 × 2',ans:4,op:'Multiplicación',hint:'',tol:.01};
+  if(!C.tables.size||!C.ops.size)return{disp:'2 × 2',ans:4,oplbl:'Multiplicación',hint:'',tol:.01};
   const tbls=[...C.tables];
-  const ops=[...C.ops];
+  const hasSingleDigit=tbls.some(t=>t<=9);
+  // ln and exp only make sense with single-digit tables; exclude them when none available
+  let ops=[...C.ops];
+  if(!hasSingleDigit) ops=ops.filter(o=>o!=='ln'&&o!=='exp');
+  if(!ops.length) ops=['mult']; // absolute fallback
   const op=pick(ops);
   let a,b,disp,ans,oplbl,hint='',tol=.01;
 
   if(op==='mult'){
-    a=pick(tbls);b=pick(tbls);
+    a=pick(tbls);b=rnd(C.fmn,C.fmx);
     ans=a*b;disp=`${a} × ${b}`;oplbl='Multiplicación';
   }else if(op==='div'){
-    a=pick(tbls);b=pick(tbls);
+    a=pick(tbls);b=rnd(C.fmn,C.fmx);
     ans=a;disp=`${a*b} ÷ ${b}`;oplbl='División';hint='resultado exacto';
   }else if(op==='add'){
-    a=pick(tbls);b=pick(tbls);
+    a=pick(tbls);b=rnd(C.fmn,C.fmx);
     ans=a+b;disp=`${a} + ${b}`;oplbl='Suma';
   }else if(op==='sub'){
-    a=pick(tbls);b=pick(tbls);
-    if(a<b){const t=a;a=b;b=t;}
+    a=pick(tbls);b=rnd(C.fmn,C.fmx);
     ans=a-b;disp=`${a} − ${b}`;oplbl='Resta';
   }else if(op==='pow'){
-    a=pick(tbls);b=rnd(2,3);
-    ans=Math.pow(a,b);
-    disp=`${a}${b===2?'²':'³'}`;oplbl=`Potencia (${a}^${b})`;
+    a=pick(tbls);
+    // cap b so a^b stays within safe integer range (≤ 10^15)
+    const maxB=a<=1?10:Math.min(Math.min(C.fmx,10),Math.floor(15/Math.log10(a)));
+    const minB=Math.max(2,C.fmn);
+    b=maxB>=minB?rnd(minB,maxB):2;
+    ans=Math.round(Math.pow(a,b));
+    disp=`${a}^${b}`;oplbl=`Potencia`;hint=`${a} elevado a ${b}`;
   }else if(op==='sqrt'){
     a=pick(tbls);
     ans=a;disp=`√${a*a}`;oplbl='Raíz cuadrada';hint=`raíz de ${a*a}`;
   }else if(op==='ln'){
-    a=pick(tbls);
-    ans=r2(Math.log(a));disp=`ln(${a})`;oplbl='Logaritmo natural';hint='redondea a 2 decimales';tol=.06;
+    const lnPool=tbls.filter(t=>t<=9);
+    a=pick(lnPool.length?lnPool:tbls);
+    ans=r2(Math.log(a));disp=`ln(${a})`;oplbl='Logaritmo natural';hint='redondea a 2 decimales';tol=0.005;
   }else if(op==='exp'){
-    a=pick(tbls);
-    ans=r2(Math.exp(a));disp=`e^${a}`;oplbl='Exponencial (eˣ)';hint='redondea a 2 decimales';tol=r2(Math.exp(a))*.01+.1;
+    const exPool=tbls.filter(t=>t<=9);
+    a=pick(exPool.length?exPool:tbls);
+    ans=r2(Math.exp(a));disp=`e^${a}`;oplbl='Exponencial (eˣ)';hint='redondea a 2 decimales';tol=0.005;
   }
   return{disp,ans,oplbl,hint,tol};
-}
-
-// ═══ SHOW Q ═══
-function showQ(q){
-  const qq=q||genQ();R.q=qq;R.done=false;
-  document.getElementById('qop').textContent=qq.oplbl;
-  document.getElementById('qtxt').textContent=qq.disp+' = ?';
-  document.getElementById('qhint').textContent=qq.hint||'';
-  document.getElementById('qt').textContent=fmtNow();
-  const inp=document.getElementById('ainp');
-  inp.value='';inp.className='ainp';
-  const fb=document.getElementById('fb');fb.className='fb';fb.textContent='';
-  updQStats();go('sq');
-  setTimeout(()=>inp.focus(),220);
-}
-
-// ═══ CHECK ═══
-function checkAns(){
-  if(R.done)return;
-  const v=document.getElementById('ainp').value.trim();
-  if(v===''||isNaN(v))return;
-  const u=parseFloat(v);
-  const inp=document.getElementById('ainp'),fb=document.getElementById('fb');
-  R.done=true;
-  const cor=Math.abs(u-R.q.ans)<=R.q.tol;
-  if(cor){R.ok++;R.st++;inp.classList.add('ok');fb.textContent=`✓ ¡Correcto! ${R.q.disp} = ${R.q.ans}`;fb.className='fb show ok';}
-  else{R.no++;R.st=0;inp.classList.add('no');fb.textContent=`✗ Incorrecto. La respuesta es ${R.q.ans}`;fb.className='fb show no';}
-  updStats();updQStats();
-}
-
-// ═══ STATS ═══
-function updStats(){
-  document.getElementById('a-ok').textContent=R.ok;
-  document.getElementById('a-no').textContent=R.no;
-  document.getElementById('a-st').textContent=R.st+'🔥';
-}
-function updQStats(){
-  document.getElementById('q-ok').textContent=R.ok;
-  document.getElementById('q-no').textContent=R.no;
-  document.getElementById('q-st').textContent=R.st;
-}
-function fmtNow(){const n=new Date();return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');}
-
-init();
-</script>
-</body>
-</html>
