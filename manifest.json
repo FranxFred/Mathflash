@@ -1,0 +1,13 @@
+{
+  "background_color": "#0a0a0f",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "MathFlash",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "MathFlash",
+  "start_url": "/",
+  "theme_color": "#7b6cff",
+  "lang": "es",
+  "id": "/mathflash"
+}
