@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-  <link rel="manifest" href="/mathflash/manifest.json">
+<link rel="manifest" href="/Mathflash/manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0a0f">
 <meta name="mobile-web-app-capable" content="yes">
@@ -622,3 +622,50 @@ function genQ(){
     ans=r2(Math.exp(a));disp=`e^${a}`;oplbl='Exponencial (eˣ)';hint='redondea a 2 decimales';tol=0.005;
   }
   return{disp,ans,oplbl,hint,tol};
+}
+
+// ═══ SHOW Q ═══
+function showQ(q){
+  const qq=q||genQ();R.q=qq;R.done=false;
+  document.getElementById('qop').textContent=qq.oplbl;
+  document.getElementById('qtxt').textContent=qq.disp+' = ?';
+  document.getElementById('qhint').textContent=qq.hint||'';
+  document.getElementById('qt').textContent=fmtNow();
+  const inp=document.getElementById('ainp');
+  inp.value='';inp.className='ainp';
+  const fb=document.getElementById('fb');fb.className='fb';fb.textContent='';
+  updQStats();go('sq');
+  setTimeout(()=>inp.focus(),220);
+}
+
+// ═══ CHECK ═══
+function checkAns(){
+  if(R.done)return;
+  const v=document.getElementById('ainp').value.trim();
+  if(v===''||isNaN(v))return;
+  const u=parseFloat(v);
+  const inp=document.getElementById('ainp'),fb=document.getElementById('fb');
+  R.done=true;
+  const cor=Math.abs(u-R.q.ans)<=R.q.tol;
+  if(cor){R.ok++;R.st++;inp.classList.add('ok');fb.textContent=`✓ ¡Correcto! ${R.q.disp} = ${R.q.ans}`;fb.className='fb show ok';}
+  else{R.no++;R.st=0;inp.classList.add('no');fb.textContent=`✗ Incorrecto. La respuesta es ${R.q.ans}`;fb.className='fb show no';}
+  updStats();updQStats();
+}
+
+// ═══ STATS ═══
+function updStats(){
+  document.getElementById('a-ok').textContent=R.ok;
+  document.getElementById('a-no').textContent=R.no;
+  document.getElementById('a-st').textContent=R.st+'🔥';
+}
+function updQStats(){
+  document.getElementById('q-ok').textContent=R.ok;
+  document.getElementById('q-no').textContent=R.no;
+  document.getElementById('q-st').textContent=R.st;
+}
+function fmtNow(){const n=new Date();return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');}
+
+init();
+</script>
+</body>
+</html>
