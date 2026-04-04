@@ -9,8 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/google/material-design-icons/master/png/action/flash_on/materialicons/48dp/2x/baseline_flash_on_white_48dp.png",
-      "sizes": "96x96",
+      "src": "https://via.placeholder.com/192x192/7b6cff/ffffff?text=MF",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/7b6cff/ffffff?text=MF",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
