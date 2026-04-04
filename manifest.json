@@ -2,7 +2,7 @@
   "name": "MathFlash",
   "short_name": "MathFlash",
   "description": "Examen sorpresa de matemáticas",
-  "start_url": "/mathflash/",
+  "start_url": "/Mathflash/",
   "display": "standalone",
   "background_color": "#0a0a0f",
   "theme_color": "#7b6cff",
