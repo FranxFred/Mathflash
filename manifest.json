@@ -1,13 +1,17 @@
 {
-  "background_color": "#0a0a0f",
-  "dir": "ltr",
-  "display": "standalone",
   "name": "MathFlash",
-  "orientation": "any",
-  "scope": "/",
   "short_name": "MathFlash",
-  "start_url": "/",
+  "description": "Examen sorpresa de matemáticas",
+  "start_url": "/mathflash/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
   "theme_color": "#7b6cff",
-  "lang": "es",
-  "id": "/mathflash"
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/google/material-design-icons/master/png/action/flash_on/materialicons/48dp/2x/baseline_flash_on_white_48dp.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    }
+  ]
 }
